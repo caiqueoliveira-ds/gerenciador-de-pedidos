@@ -13,4 +13,29 @@
         <maven.compiler.target>17</maven.compiler.target>
     </properties>
 
+
+    <dependencies>
+    <!-- Dependência do MySQL Connector/J -->
+    <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>8.0.44</version>
+    </dependency>
+
+    <!-- Dependência do JUnit (JUnit 5) -->
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>5.7.2</version>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
+        <version>5.7.2</version>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+
 </project>
