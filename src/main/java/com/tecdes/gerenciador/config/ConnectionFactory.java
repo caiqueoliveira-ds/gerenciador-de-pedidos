@@ -13,7 +13,7 @@ public class ConnectionFactory {
     private Connection connection;
     
     // Configurações do banco de dados
-    private final String URL = "jdbc:mysql://localhost:3306/lanchonete_db";
+    private final String URL = "jdbc:mysql://localhost:3306/gerenciador_pedidos";
     private final String USER = "root";
     private final String PASSWORD = "senai123";
     
