@@ -94,3 +94,11 @@ CREATE TABLE T_CLIENTE_ENDERECO( /*ASSOCIATIVA*/
     FOREIGN KEY (id_endereco) REFERENCES T_GRP_ENDERECO(id_endereco)
 
 );
+
+CREATE TABLE T_GRP_PAGAMENTO(
+
+    id_pagamento INT NOT NULL,
+    tp_pagamento CHAR(1) NOT NULL,
+    dt_pagamento DATETIME NOT NULL,
+    vl_pagamento DECIMAL(5,2) NOT NULL,
+);
