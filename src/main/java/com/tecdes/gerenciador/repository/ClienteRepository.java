@@ -1,5 +1,8 @@
 package com.tecdes.gerenciador.repository;
 
+import java.util.List;
+import com.tecdes.gerenciador.model.entity.Cliente;
+
 public class ClienteRepository implements IClienteRepository{
 
     @Override
