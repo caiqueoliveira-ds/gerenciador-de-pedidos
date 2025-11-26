@@ -39,9 +39,9 @@ public class ProdutoRepository implements IProdutoRepository {
     }
 
     @Override
-    public boolean delete(Integer id) {
-        if (banco.containsKey(id)) {
-            banco.remove(id);
+    public boolean delete(Integer id_produto) {
+        if (banco.containsKey(id_produto)) {
+            banco.remove(id_produto);
             return true;
         }
         return false;

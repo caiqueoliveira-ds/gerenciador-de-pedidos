@@ -66,9 +66,13 @@ public class Produto {
     public void setDt_fabricacao(Date dt_fabricacao) {
         this.dt_fabricacao = dt_fabricacao;}
 
-    @Override    
-    public String toString(){
-        return String.format("Produto [id_produto=%d, cd_produto=%d, nm_produto=%s, st_produto=%d, vl_produto=R$ %.2f, dt_validade=%s, dt_fabricacao=%s");
-    }
+        @Override
+        public String toString() {
+            return String.format(
+                "Produto [id_produto=%d, cd_produto=%d, nm_produto=%s, st_produto=%d, vl_produto=R$ %.2f, dt_validade=%s, dt_fabricacao=%s]",
+                id_produto, cd_produto, nm_produto, st_produto, vl_produto, dt_validade, dt_fabricacao
+            );
+        }
+        
     
 }
