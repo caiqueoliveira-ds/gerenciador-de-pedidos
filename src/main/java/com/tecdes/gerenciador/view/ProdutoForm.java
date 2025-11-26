@@ -1,7 +1,7 @@
 package com.tecdes.gerenciador.view;
 
-import com.tecdes.gerenciador.controller.ProdutoController;
+import javax.swing.JFrame;
 
-public class ProdutoForm {
-    private ProdutoController controller;
+public class ProdutoForm extends JFrame{
+
 }

@@ -1,5 +1,7 @@
 package com.tecdes.gerenciador.view;
 
-public class PedidoForm {
+import javax.swing.JFrame;
+
+public class PedidoForm extends JFrame{
 
 }
