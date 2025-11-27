@@ -4,7 +4,7 @@ import com.tecdes.gerenciador.view.MainView;
 
 public class MainController {
 
-    private MainView mainView;
+    public MainView mainView;
 
     public MainController(MainView mainView) {
         this.mainView = mainView;
