@@ -1,18 +1,8 @@
 package com.tecdes.gerenciador.view;
 
-import java.awt.Color;
-
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-
-import com.tecdes.gerenciador.repository.ClienteRepository;
 
 public class ClienteForm extends JFrame{
 
