@@ -1,5 +1,7 @@
 package com.tecdes.gerenciador.model.entity;
 
+import java.util.List;
+
 public class Pedido {
 /*
  * id_pedido INT PRIMARY KEY AUTO_INCREMENT,
@@ -12,6 +14,7 @@ public class Pedido {
     private Integer cd_pedido;
     private String st_pedido;
     private String ds_pedido;
+    private List<ItemPedido> itens;
 
     public Pedido(){};
 
@@ -46,4 +49,18 @@ public class Pedido {
     public String toString(){
         return String.format("Pedido [id_pedido=%d, cd_pedido=%d, st_pedido=%s, ds_pedido=%s]");
     }
+
+    public List<ItemPedido> getItens() {
+        return itens;
+    }
+
+    public void setItens(List<ItemPedido> itens) {
+        this.itens = itens;
+    }
+
+    public void setTotal(double totalPedido) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setTotal'");
+    }
+
 }
