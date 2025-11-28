@@ -15,6 +15,7 @@ public class Pedido {
     private String st_pedido;
     private String ds_pedido;
     private List<ItemPedido> itens;
+    protected Double total;
 
     public Pedido(){};
 
@@ -58,9 +59,11 @@ public class Pedido {
         this.itens = itens;
     }
 
-    public void setTotal(double totalPedido) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setTotal'");
+    public Double getTotal() {
+        return total;
     }
-
+    
+    public void setTotal(Double total) {
+        this.total = total;
+    }
 }
