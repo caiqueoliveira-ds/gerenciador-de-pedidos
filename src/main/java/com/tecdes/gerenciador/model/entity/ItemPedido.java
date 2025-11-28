@@ -6,8 +6,7 @@ public class ItemPedido extends Pedido {
 
     private Produto produto;
     private Integer quantidade;
-    private Double total;
-
+    
     public ItemPedido(){}
 
     public ItemPedido(Produto produto, Integer quantidade){
