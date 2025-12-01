@@ -1,45 +1,64 @@
 package com.tecdes.gerenciador.model.entity;
 
 public class ItemPedido {
-
     private Produto produto;
     private Integer quantidade;
-    private Double total;
-
-    public ItemPedido(){}
-
-    public ItemPedido(Produto produto, Integer quantidade){
+    private Double subtotal;
+    
+    // Construtor padrão
+    public ItemPedido() {}
+    
+    // Construtor com parâmetros
+    public ItemPedido(Produto produto, Integer quantidade) {
         this.produto = produto;
         this.quantidade = quantidade;
-        this.total = calcularTotal();
+        calcularSubtotal();
     }
-
+    
+    // Getters e Setters
     public Produto getProduto() {
         return produto;
     }
-
+    
     public void setProduto(Produto produto) {
         this.produto = produto;
-        this.total = calcularTotal();
+        calcularSubtotal();
     }
-
+    
     public Integer getQuantidade() {
         return quantidade;
     }
-
+    
     public void setQuantidade(Integer quantidade) {
         this.quantidade = quantidade;
-        this.total = calcularTotal();
+        calcularSubtotal();
     }
-
-    public Double calcularTotal() {
-        if (produto == null || produto.getVl_produto() == null || quantidade == null) {
-            return 0.0;
+    
+    public Double getSubtotal() {
+        return subtotal;
+    }
+    
+    public void setSubtotal(Double subtotal) {
+        this.subtotal = subtotal;
+    }
+    
+    // Métodos de negócio
+    public Double calcularSubtotal() {
+        if (produto != null && produto.getVl_produto() != null && quantidade != null) {
+            this.subtotal = produto.getVl_produto() * quantidade;
+        } else {
+            this.subtotal = 0.0;
         }
-        return produto.getVl_produto() * quantidade;
+        return this.subtotal;
     }
-
-    public Double getTotal() {
-        return total;
+    
+    public Double calcularTotal() {
+        return calcularSubtotal();
+    }
+    
+    @Override
+    public String toString() {
+        return "ItemPedido [produto=" + (produto != null ? produto.getNm_produto() : "null") 
+                + ", quantidade=" + quantidade + ", subtotal=" + subtotal + "]";
     }
 }
