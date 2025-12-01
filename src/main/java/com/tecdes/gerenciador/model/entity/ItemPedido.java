@@ -1,12 +1,11 @@
 package com.tecdes.gerenciador.model.entity;
 
-import java.util.List;
-
-public class ItemPedido extends Pedido {
+public class ItemPedido {
 
     private Produto produto;
     private Integer quantidade;
-    
+    private Double total;
+
     public ItemPedido(){}
 
     public ItemPedido(Produto produto, Integer quantidade){
@@ -33,20 +32,14 @@ public class ItemPedido extends Pedido {
         this.total = calcularTotal();
     }
 
-    public Double calcularTotal(){
-        if (produto == null || produto.getVl_produto() == null || quantidade == null){
-                return 0.0;
+    public Double calcularTotal() {
+        if (produto == null || produto.getVl_produto() == null || quantidade == null) {
+            return 0.0;
         }
         return produto.getVl_produto() * quantidade;
     }
 
-    public Double getTotal(){
+    public Double getTotal() {
         return total;
     }
-
-    public List getItens() {
-            return getItens();
-
-    };
- 
 }

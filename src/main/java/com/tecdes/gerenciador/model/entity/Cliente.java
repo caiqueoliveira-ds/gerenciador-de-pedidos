@@ -10,12 +10,12 @@ public class Cliente {
 
     private Integer id_cliente;
     private String nm_cliente;
-    private Integer nr_cpf;
+    private String nr_cpf;
     private String ds_email;
 
     public Cliente(){}
 
-    public Cliente(Integer id_cliente, String nm_cliente, Integer nr_cpf, String ds_email){
+    public Cliente(Integer id_cliente, String nm_cliente, String nr_cpf, String ds_email){
 
         this.id_cliente = id_cliente;
         this.nm_cliente = nm_cliente;
@@ -36,9 +36,9 @@ public class Cliente {
     public void setNm_cliente(String nm_cliente){
         this.nm_cliente = nm_cliente;}
 
-    public Integer getNr_cpf(){
+    public String getNr_cpf(){
         return nr_cpf;}
-    public void setNr_cpf(Integer nr_cpf){
+    public void setNr_cpf(String nr_cpf){
         this.nr_cpf = nr_cpf;}
 
     public String getDs_email(){

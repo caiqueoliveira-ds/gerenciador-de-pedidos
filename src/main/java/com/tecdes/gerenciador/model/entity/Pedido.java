@@ -46,10 +46,13 @@ public class Pedido {
     public void setDs_pedido (String ds_pedido){
         this.ds_pedido = ds_pedido;}
 
-    @Override
-    public String toString(){
-        return String.format("Pedido [id_pedido=%d, cd_pedido=%d, st_pedido=%s, ds_pedido=%s]");
-    }
+        @Override
+        public String toString(){
+            return String.format
+            ("Pedido [id_pedido=%d, cd_pedido=%d, st_pedido=%s, ds_pedido=%s]",
+            id_pedido, cd_pedido, st_pedido, ds_pedido);
+        }
+        
 
     public List<ItemPedido> getItens() {
         return itens;

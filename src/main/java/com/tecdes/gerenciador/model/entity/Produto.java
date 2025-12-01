@@ -14,14 +14,14 @@ public class Produto {
     private Integer id_produto;
     private Integer cd_produto;
     private String nm_produto;
-    private Integer st_produto;
+    private String st_produto;
     private Double vl_produto;
     private Date dt_validade;
     private Date dt_fabricacao;
     
     public Produto(){}
 
-    public Produto(String nm_produto, Integer cd_produto, Double vl_produto, Integer id_produto, Integer st_produto, Date dt_validade, Date dt_fabricacao){
+    public Produto(String nm_produto, Integer cd_produto, Double vl_produto, Integer id_produto, String st_produto, Date dt_validade, Date dt_fabricacao){
         this.id_produto = id_produto;
         this.cd_produto = cd_produto;
         this.nm_produto = nm_produto;
@@ -46,9 +46,9 @@ public class Produto {
     public void setNm_produto(String nm_produto) {
         this.nm_produto = nm_produto;}
 
-    public Integer getSt_produto() {
+    public String getSt_produto() {
         return st_produto;}
-    public void setSt_produto(Integer st_produto) {
+    public void setSt_produto(String st_produto) {
         this.st_produto = st_produto;}
 
     public Double getVl_produto() {
@@ -66,9 +66,12 @@ public class Produto {
     public void setDt_fabricacao(Date dt_fabricacao) {
         this.dt_fabricacao = dt_fabricacao;}
 
-    @Override    
-    public String toString(){
-        return String.format("Produto [id_produto=%d, cd_produto=%d, nm_produto=%s, st_produto=%d, vl_produto=R$ %.2f, dt_validade=%s, dt_fabricacao=%s");
-    }
+        @Override    
+        public String toString(){
+            return String.format
+            ("Produto [id_produto=%d, cd_produto=%d, nm_produto=%s, st_produto=%s, vl_produto=R$ %.2f, dt_validade=%s, dt_fabricacao=%s]",
+            id_produto, cd_produto, nm_produto, st_produto, vl_produto, dt_validade, dt_fabricacao);
+        }
+        
     
 }
