@@ -1,7 +1,6 @@
 package com.tecdes.gerenciador;
 
 import java.util.List;
-
 import com.tecdes.gerenciador.controller.MainController;
 import com.tecdes.gerenciador.model.entity.Pedido;
 import com.tecdes.gerenciador.repository.PedidoRepository;
@@ -17,6 +16,6 @@ public class Main {
     
         PedidoRepository pedidoRepository = new PedidoRepository();
         List<Pedido> pedidos = pedidoRepository.findAll();
-        RelatorioUtil.gerarRelatorio(pedidos, "relatorio.txt");
+        RelatorioUtil.gerarRelatorioPedidos(pedidos, "relatorio.txt");
     }
 }
