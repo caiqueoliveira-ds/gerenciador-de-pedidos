@@ -6,8 +6,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.List;
 import com.tecdes.gerenciador.controller.ProdutoController;
 import com.tecdes.gerenciador.model.entity.Produto;
 
@@ -155,8 +154,7 @@ public class ProdutoForm extends JFrame {
     
     private void carregarDados() {
         tableModel.setRowCount(0);
-        java.util.List<Produto> produtos = produtoController.listarProdutos();
-        
+        List<Produto> produtos = produtoController.listarProdutos();
         
         for (Produto p : produtos) {
             Object[] row = {
@@ -164,7 +162,7 @@ public class ProdutoForm extends JFrame {
                 p.getCd_produto(),
                 p.getNm_produto(),
                 String.format("R$ %.2f", p.getVl_produto()),
-                p.getSt_produto().equals("A") ? "Ativo" : "Inativo",
+                p.getSt_produto().equals("A") ? "Ativo" : "Inativo"
             };
             tableModel.addRow(row);
         }
@@ -183,7 +181,7 @@ public class ProdutoForm extends JFrame {
     private void abrirFormularioCadastro() {
         JDialog dialog = new JDialog(this, "Cadastrar Produto", true);
         dialog.setLayout(new BorderLayout());
-        dialog.setSize(400, 350);
+        dialog.setSize(400, 300);
         dialog.setLocationRelativeTo(this);
         
         JPanel panel = new JPanel(new GridBagLayout());
@@ -193,32 +191,31 @@ public class ProdutoForm extends JFrame {
         
         // Código
         gbc.gridx = 0; gbc.gridy = 0;
-        panel.add(new JLabel("Código:"), gbc);
+        panel.add(new JLabel("Código:*"), gbc);
         gbc.gridx = 1;
         JTextField txtCodigo = new JTextField(15);
         panel.add(txtCodigo, gbc);
         
         // Nome
         gbc.gridx = 0; gbc.gridy = 1;
-        panel.add(new JLabel("Nome:"), gbc);
+        panel.add(new JLabel("Nome:*"), gbc);
         gbc.gridx = 1;
         JTextField txtNome = new JTextField(20);
         panel.add(txtNome, gbc);
         
         // Preço
         gbc.gridx = 0; gbc.gridy = 2;
-        panel.add(new JLabel("Preço:"), gbc);
+        panel.add(new JLabel("Preço:*"), gbc);
         gbc.gridx = 1;
         JTextField txtPreco = new JTextField(10);
         panel.add(txtPreco, gbc);
         
         // Status
         gbc.gridx = 0; gbc.gridy = 3;
-        panel.add(new JLabel("Status:"), gbc);
+        panel.add(new JLabel("Status:*"), gbc);
         gbc.gridx = 1;
         JComboBox<String> cmbStatus = new JComboBox<>(new String[]{"A - Ativo", "I - Inativo"});
         panel.add(cmbStatus, gbc);
-        
         
         // Botões
         JPanel panelBotoes = new JPanel();
@@ -231,7 +228,6 @@ public class ProdutoForm extends JFrame {
                 String nome = txtNome.getText();
                 Double preco = Double.parseDouble(txtPreco.getText());
                 String status = ((String) cmbStatus.getSelectedItem()).substring(0, 1);
-                
                 
                 boolean sucesso = produtoController.cadastrarProduto(codigo, nome, preco, status);
                 
@@ -269,10 +265,100 @@ public class ProdutoForm extends JFrame {
         Produto produto = produtoController.buscarProdutoPorId(produtoId);
         
         if (produto != null) {
-            JOptionPane.showMessageDialog(this, 
-                "Produto selecionado: " + produto.getNm_produto() + 
-                "\nImplemente a tela de edição aqui.");
+            abrirFormularioEdicao(produto);
         }
+    }
+    
+    private void abrirFormularioEdicao(Produto produto) {
+        JDialog dialog = new JDialog(this, "Editar Produto", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(400, 300);
+        dialog.setLocationRelativeTo(this);
+        
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // ID (somente leitura)
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(new JLabel("ID:"), gbc);
+        gbc.gridx = 1;
+        JTextField txtId = new JTextField(String.valueOf(produto.getId_produto()));
+        txtId.setEditable(false);
+        panel.add(txtId, gbc);
+        
+        // Código
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JLabel("Código:*"), gbc);
+        gbc.gridx = 1;
+        JTextField txtCodigo = new JTextField(String.valueOf(produto.getCd_produto()));
+        panel.add(txtCodigo, gbc);
+        
+        // Nome
+        gbc.gridx = 0; gbc.gridy = 2;
+        panel.add(new JLabel("Nome:*"), gbc);
+        gbc.gridx = 1;
+        JTextField txtNome = new JTextField(produto.getNm_produto());
+        panel.add(txtNome, gbc);
+        
+        // Preço
+        gbc.gridx = 0; gbc.gridy = 3;
+        panel.add(new JLabel("Preço:*"), gbc);
+        gbc.gridx = 1;
+        JTextField txtPreco = new JTextField(String.valueOf(produto.getVl_produto()));
+        panel.add(txtPreco, gbc);
+        
+        // Status
+        gbc.gridx = 0; gbc.gridy = 4;
+        panel.add(new JLabel("Status:*"), gbc);
+        gbc.gridx = 1;
+        JComboBox<String> cmbStatus = new JComboBox<>(new String[]{"A - Ativo", "I - Inativo"});
+        if ("A".equals(produto.getSt_produto())) {
+            cmbStatus.setSelectedIndex(0);
+        } else {
+            cmbStatus.setSelectedIndex(1);
+        }
+        panel.add(cmbStatus, gbc);
+        
+        // Botões
+        JPanel panelBotoes = new JPanel();
+        JButton btnSalvar = new JButton("Salvar Alterações");
+        JButton btnCancelar = new JButton("Cancelar");
+        
+        btnSalvar.addActionListener(e -> {
+            try {
+                Integer id = produto.getId_produto();
+                Integer codigo = Integer.parseInt(txtCodigo.getText());
+                String nome = txtNome.getText();
+                Double preco = Double.parseDouble(txtPreco.getText());
+                String status = ((String) cmbStatus.getSelectedItem()).substring(0, 1);
+                
+                boolean sucesso = produtoController.atualizarProduto(id, codigo, nome, status, preco);
+                
+                if (sucesso) {
+                    JOptionPane.showMessageDialog(dialog, "Produto atualizado com sucesso!");
+                    carregarDados();
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Erro ao atualizar produto!", "Erro", JOptionPane.ERROR_MESSAGE);
+                }
+                
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog, "Preço e código devem ser números válidos!", "Erro", JOptionPane.ERROR_MESSAGE);
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Erro: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        btnCancelar.addActionListener(e -> dialog.dispose());
+        
+        panelBotoes.add(btnSalvar);
+        panelBotoes.add(btnCancelar);
+        
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.add(panelBotoes, BorderLayout.SOUTH);
+        dialog.setVisible(true);
     }
     
     private void removerProduto() {
@@ -327,7 +413,7 @@ public class ProdutoForm extends JFrame {
         }
         
         tableModel.setRowCount(0);
-        java.util.List<Produto> resultados;
+        List<Produto> resultados;
         
         try {
             Integer codigo = Integer.parseInt(termo);
@@ -349,7 +435,7 @@ public class ProdutoForm extends JFrame {
         String status = (String) cmbStatus.getSelectedItem();
         
         tableModel.setRowCount(0);
-        java.util.List<Produto> produtos;
+        List<Produto> produtos;
         
         if ("Todos".equals(status)) {
             produtos = produtoController.listarProdutos();
@@ -358,7 +444,6 @@ public class ProdutoForm extends JFrame {
         } else {
             produtos = produtoController.listarProdutosInativos();
         }
-    
         
         for (Produto p : produtos) {
             Object[] row = {
@@ -366,7 +451,7 @@ public class ProdutoForm extends JFrame {
                 p.getCd_produto(),
                 p.getNm_produto(),
                 String.format("R$ %.2f", p.getVl_produto()),
-                p.getSt_produto().equals("A") ? "Ativo" : "Inativo",
+                p.getSt_produto().equals("A") ? "Ativo" : "Inativo"
             };
             tableModel.addRow(row);
         }
@@ -375,13 +460,12 @@ public class ProdutoForm extends JFrame {
     }
     
     private void adicionarProdutoNaTabela(Produto produto) {
-
         Object[] row = {
             produto.getId_produto(),
             produto.getCd_produto(),
             produto.getNm_produto(),
             String.format("R$ %.2f", produto.getVl_produto()),
-            produto.getSt_produto().equals("A") ? "Ativo" : "Inativo",
+            produto.getSt_produto().equals("A") ? "Ativo" : "Inativo"
         };
         tableModel.addRow(row);
     }
