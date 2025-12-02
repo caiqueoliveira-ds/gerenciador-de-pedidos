@@ -1,96 +1,154 @@
 package com.tecdes.gerenciador.repository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.tecdes.gerenciador.config.Conexao;
 import com.tecdes.gerenciador.model.entity.Cliente;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ClienteRepository implements IClienteRepository {
 
-    private final Map<Integer, Cliente> banco = new HashMap<>();
-    private final Map<String, Integer> cpfIndex = new HashMap<>(); // Índice para busca por CPF
-    private int idGenerator = 1;
-
     @Override
     public Cliente save(Cliente cliente) {
-        if (cliente == null) {
-            throw new IllegalArgumentException("Cliente não pode ser nulo");
+        String sql = "INSERT INTO T_GRP_CLIENTE (nm_cliente, nr_cpf, ds_email) VALUES (?, ?, ?)";
+
+        try (Connection conn = Conexao.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            stmt.setString(1, cliente.getNm_cliente());
+            stmt.setString(2, cliente.getNr_cpf());
+            stmt.setString(3, cliente.getDs_email());
+
+            stmt.executeUpdate();
+
+            ResultSet rs = stmt.getGeneratedKeys();
+            if (rs.next()) {
+                cliente.setId_cliente(rs.getInt(1));
+            }
+
+            return cliente;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao salvar cliente: " + e.getMessage());
         }
-        
-        // Validar CPF único
-        if (cliente.getNr_cpf() != null && existsByCpf(cliente.getNr_cpf())) {
-            throw new IllegalArgumentException("CPF já cadastrado: " + cliente.getNr_cpf());
-        }
-        
-        // Se já tem ID, é uma atualização
-        if (cliente.getId_cliente() != null && banco.containsKey(cliente.getId_cliente())) {
-            return update(cliente);
-        }
-        
-        // Se não tem ID, é um novo cliente
-        cliente.setId_cliente(idGenerator++);
-        banco.put(cliente.getId_cliente(), cliente);
-        cpfIndex.put(cliente.getNr_cpf(), cliente.getId_cliente());
-        return cliente;
     }
 
     @Override
-    public Cliente findById(Integer id_cliente) {
-        return banco.get(id_cliente);
+    public Cliente findById(Integer id) {
+        String sql = "SELECT * FROM T_GRP_CLIENTE WHERE id_cliente = ?";
+
+        try (Connection conn = Conexao.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return mapCliente(rs);
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao buscar cliente: " + e.getMessage());
+        }
     }
 
     @Override
     public Cliente findByCpf(String cpf) {
-        Integer id = cpfIndex.get(cpf);
-        return id != null ? banco.get(id) : null;
+        String sql = "SELECT * FROM T_GRP_CLIENTE WHERE nr_cpf = ?";
+
+        try (Connection conn = Conexao.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, cpf);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return mapCliente(rs);
+            }
+
+            return null;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao buscar cliente por CPF: " + e.getMessage());
+        }
     }
 
     @Override
     public List<Cliente> findAll() {
-        return new ArrayList<>(banco.values());
+        String sql = "SELECT * FROM T_GRP_CLIENTE";
+
+        List<Cliente> clientes = new ArrayList<>();
+
+        try (Connection conn = Conexao.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                clientes.add(mapCliente(rs));
+            }
+
+            return clientes;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao listar clientes: " + e.getMessage());
+        }
     }
 
     @Override
     public Cliente update(Cliente cliente) {
-        if (cliente == null || cliente.getId_cliente() == null) {
-            throw new IllegalArgumentException("Cliente ou ID não pode ser nulo");
+        String sql = "UPDATE T_GRP_CLIENTE SET nm_cliente=?, nr_cpf=?, ds_email=? WHERE id_cliente=?";
+
+        try (Connection conn = Conexao.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, cliente.getNm_cliente());
+            stmt.setString(2, cliente.getNr_cpf());
+            stmt.setString(3, cliente.getDs_email());
+            stmt.setInt(4, cliente.getId_cliente());
+
+            stmt.executeUpdate();
+            return cliente;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao atualizar cliente: " + e.getMessage());
         }
-        
-        if (!banco.containsKey(cliente.getId_cliente())) {
-            throw new IllegalArgumentException("Cliente não encontrado para atualização");
-        }
-        
-        // Atualizar índice de CPF se necessário
-        Cliente clienteAntigo = banco.get(cliente.getId_cliente());
-        if (!clienteAntigo.getNr_cpf().equals(cliente.getNr_cpf())) {
-            cpfIndex.remove(clienteAntigo.getNr_cpf());
-            cpfIndex.put(cliente.getNr_cpf(), cliente.getId_cliente());
-        }
-        
-        banco.put(cliente.getId_cliente(), cliente);
-        return cliente;
     }
 
     @Override
-    public boolean delete(Integer id_cliente) {
-        if (banco.containsKey(id_cliente)) {
-            Cliente cliente = banco.get(id_cliente);
-            cpfIndex.remove(cliente.getNr_cpf());
-            banco.remove(id_cliente);
-            return true;
+    public boolean delete(Integer id) {
+        String sql = "DELETE FROM T_GRP_CLIENTE WHERE id_cliente=?";
+
+        try (Connection conn = Conexao.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao excluir cliente: " + e.getMessage());
         }
-        return false;
     }
 
     @Override
-    public boolean existsById(Integer id_cliente) {
-        return banco.containsKey(id_cliente);
+    public boolean existsById(Integer id) {
+        return findById(id) != null;
     }
 
     @Override
     public boolean existsByCpf(String cpf) {
-        return cpfIndex.containsKey(cpf);
+        return findByCpf(cpf) != null;
+    }
+
+    private Cliente mapCliente(ResultSet rs) throws SQLException {
+        Cliente c = new Cliente();
+        c.setId_cliente(rs.getInt("id_cliente"));
+        c.setNm_cliente(rs.getString("nm_cliente"));
+        c.setNr_cpf(rs.getString("nr_cpf"));
+        c.setDs_email(rs.getString("ds_email"));
+        return c;
     }
 }
