@@ -3,298 +3,435 @@ package com.tecdes.gerenciador.view;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.text.DecimalFormat;
+import java.awt.event.*;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import com.tecdes.gerenciador.controller.ProdutoController;
+import com.tecdes.gerenciador.model.entity.Produto;
 
 public class ProdutoForm extends JFrame {
-
+    
+    private ProdutoController produtoController;
+    private DefaultTableModel tableModel;
     private JTable tabelaProdutos;
-    private JButton btnAddProduto;
-    private JButton btnEditarProduto;
-    private JButton btnRemoverProduto;
-    private JButton btnBuscar;
-    private JButton btnAtivarDesativar;
+    private JButton btnAddProduto, btnEditarProduto, btnRemoverProduto, btnBuscar, btnAtivarDesativar;
     private JTextField txtBusca;
-    private JComboBox<String> cmbCategoria;
-    private JComboBox<String> cmbStatus;
-    private JLabel lblTotalProdutos;
-    private JLabel lblProdutosAtivos;
-
-    // Cores para lanchonete
-    private final Color COR_PRIMARIA = new Color(41, 128, 185);    // Laranja - cor de lanchonete
-    private final Color COR_SECUNDARIA = new Color(243, 156, 18);  // Laranja claro
-    private final Color COR_VERMELHO = new Color(231, 76, 60);     // Vermelho para carnes/combos
-    private final Color COR_VERDE = new Color(46, 204, 113);       // Verde para saladas/vegetarianos
-    private final Color COR_TEXTO = new Color(44, 62, 80);         // Cinza escuro
-    private final Color COR_BORDA = new Color(236, 240, 241);      // Cinza claro
-
+    private JComboBox<String> cmbCategoria, cmbStatus;
+    private JLabel lblTotalProdutos, lblProdutosAtivos;
+    
+    private final Color COR_PRIMARIA = new Color(41, 128, 185);
+    private final Color COR_VERDE = new Color(46, 204, 113);
+    private final Color COR_TEXTO = new Color(44, 62, 80);
+    private final Color COR_BORDA = new Color(236, 240, 241);
+    
     public ProdutoForm() {
+        this.produtoController = new ProdutoController();
         initComponents();
         layoutComponents();
         aplicarEstilos();
-        carregarDadosExemplo(); // Dados de exemplo para lanchonete
+        configurarEventos();
+        carregarDados();
     }
-
+    
     private void initComponents() {
-        setTitle("Sistema de Lanchonete - Cardápio");
+        setTitle("Gerenciador de Produtos");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1100, 700);
+        setSize(1200, 700);
         setLocationRelativeTo(null);
-        setResizable(true);
-
-        // Componentes
-        btnAddProduto = new JButton("Novo Item");
+        
+        btnAddProduto = new JButton("Novo Produto");
         btnEditarProduto = new JButton("Editar");
         btnRemoverProduto = new JButton("Remover");
         btnAtivarDesativar = new JButton("Ativar/Desativar");
         btnBuscar = new JButton("Buscar");
-        txtBusca = new JTextField(15);
+        txtBusca = new JTextField(20);
         
-        // Filtros para lanchonete
-        cmbCategoria = new JComboBox<>(new String[]{
-            "Todos", "Lanches", "Bebidas", "Acompanhamentos", 
-            "Sobremesas", "Promoções", "Vegetariano"
-        });
+        cmbCategoria = new JComboBox<>(new String[]{"Todos", "Lanches", "Bebidas", "Acompanhamentos"});
+        cmbStatus = new JComboBox<>(new String[]{"Todos", "Ativos", "Inativos"});
         
-        cmbStatus = new JComboBox<>(new String[]{
-            "Todos", "Ativos", "Inativos", "Mais Vendidos", "Em Promoção"
-        });
-        
-        // Labels de estatísticas
-        lblTotalProdutos = new JLabel("Itens: 0");
+        lblTotalProdutos = new JLabel("Total: 0");
         lblProdutosAtivos = new JLabel("Ativos: 0");
-
-        // Configurar tabela
-        tabelaProdutos = new JTable();
+        
+        String[] colunas = {"ID", "Código", "Nome", "Preço", "Status", "Validade", "Fabricação"};
+        tableModel = new DefaultTableModel(colunas, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        tabelaProdutos = new JTable(tableModel);
         tabelaProdutos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     }
-
+    
     private void layoutComponents() {
         setLayout(new BorderLayout(10, 10));
         
         JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
         panelPrincipal.setBorder(new EmptyBorder(15, 15, 15, 15));
-
-        // === CABEÇALHO ===
-        JPanel panelCabecalho = criarPanelCabecalho();
         
-        // === BARRA DE FERRAMENTAS ===
-        JPanel panelFerramentas = criarPanelFerramentas();
+        // Cabeçalho
+        JPanel panelCabecalho = new JPanel(new BorderLayout());
+        JLabel lblTitulo = new JLabel("Gerenciamento de Produtos");
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblTitulo.setForeground(COR_TEXTO);
         
-        // === PAINEL DE ESTATÍSTICAS ===
-        JPanel panelEstatisticas = criarPanelEstatisticas();
+        JPanel panelBotoesCabecalho = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        panelBotoesCabecalho.add(btnAddProduto);
         
-        // === TABELA ===
-        JPanel panelTabela = criarPanelTabela();
+        panelCabecalho.add(lblTitulo, BorderLayout.WEST);
+        panelCabecalho.add(panelBotoesCabecalho, BorderLayout.EAST);
         
-        // === STATUS BAR ===
-        JPanel panelStatus = criarPanelStatus();
-
-        // Montar layout principal
+        // Ferramentas
+        JPanel panelFerramentas = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        panelFerramentas.setBorder(BorderFactory.createTitledBorder("Filtros e Ações"));
+        panelFerramentas.add(new JLabel("Buscar:"));
+        panelFerramentas.add(txtBusca);
+        panelFerramentas.add(btnBuscar);
+        panelFerramentas.add(Box.createHorizontalStrut(20));
+        panelFerramentas.add(new JLabel("Status:"));
+        panelFerramentas.add(cmbStatus);
+        panelFerramentas.add(Box.createHorizontalStrut(20));
+        panelFerramentas.add(btnEditarProduto);
+        panelFerramentas.add(btnAtivarDesativar);
+        panelFerramentas.add(btnRemoverProduto);
+        
+        // Estatísticas
+        JPanel panelEstatisticas = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 5));
+        panelEstatisticas.setBorder(BorderFactory.createTitledBorder("Estatísticas"));
+        panelEstatisticas.add(lblTotalProdutos);
+        panelEstatisticas.add(lblProdutosAtivos);
+        
+        // Tabela
+        JPanel panelTabela = new JPanel(new BorderLayout());
+        JScrollPane scrollPane = new JScrollPane(tabelaProdutos);
+        panelTabela.add(scrollPane, BorderLayout.CENTER);
+        
+        // Montagem
         panelPrincipal.add(panelCabecalho, BorderLayout.NORTH);
         panelPrincipal.add(panelFerramentas, BorderLayout.CENTER);
         panelPrincipal.add(panelEstatisticas, BorderLayout.SOUTH);
         
         add(panelPrincipal, BorderLayout.NORTH);
         add(panelTabela, BorderLayout.CENTER);
-        add(panelStatus, BorderLayout.SOUTH);
     }
-
-    private JPanel criarPanelCabecalho() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(new EmptyBorder(0, 0, 15, 0));
-
-        // Título com ícone de lanchonete
-        JLabel lblTitulo = new JLabel("Cardápio da Lanchonete");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        lblTitulo.setForeground(COR_TEXTO);
-
-        // Botões de ação
-        JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        panelBotoes.add(btnAddProduto);
-
-        panel.add(lblTitulo, BorderLayout.WEST);
-        panel.add(panelBotoes, BorderLayout.EAST);
-
-        return panel;
-    }
-
-    private JPanel criarPanelFerramentas() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(COR_BORDA),
-            "Gerenciar Cardápio",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            new Font("Segoe UI", Font.BOLD, 12),
-            COR_TEXTO
-        ));
-
-        panel.add(new JLabel("Buscar:"));
-        panel.add(txtBusca);
-        panel.add(btnBuscar);
-        panel.add(Box.createHorizontalStrut(15));
-        panel.add(new JLabel("Categoria:"));
-        panel.add(cmbCategoria);
-        panel.add(Box.createHorizontalStrut(15));
-        panel.add(new JLabel("Status:"));
-        panel.add(cmbStatus);
-        panel.add(Box.createHorizontalStrut(15));
-        panel.add(btnEditarProduto);
-        panel.add(btnAtivarDesativar);
-        panel.add(btnRemoverProduto);
-
-        return panel;
-    }
-
-    private JPanel criarPanelEstatisticas() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(COR_BORDA),
-            "Resumo do Cardápio",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            new Font("Segoe UI", Font.BOLD, 12),
-            COR_TEXTO
-        ));
-
-        // Estilizar labels de estatísticas
-        estiloLabelEstatistica(lblTotalProdutos, COR_TEXTO, "Total de itens no cardápio");
-        estiloLabelEstatistica(lblProdutosAtivos, COR_VERDE, "Itens disponíveis para venda");
-
-        panel.add(lblTotalProdutos);
-        panel.add(lblProdutosAtivos);
-
-        return panel;
-    }
-
-    private JPanel criarPanelTabela() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(COR_BORDA),
-            "Lista de Itens do Cardápio",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            new Font("Segoe UI", Font.BOLD, 12),
-            COR_TEXTO
-        ));
-
-        // Personalizar a tabela
-        tabelaProdutos.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        tabelaProdutos.setRowHeight(35);
-        tabelaProdutos.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-        tabelaProdutos.getTableHeader().setBackground(COR_PRIMARIA);
-        tabelaProdutos.getTableHeader().setForeground(Color.WHITE);
-        tabelaProdutos.setGridColor(COR_BORDA);
-        tabelaProdutos.setShowGrid(true);
-
-        JScrollPane scrollPane = new JScrollPane(tabelaProdutos);
-        scrollPane.setPreferredSize(new Dimension(900, 400));
-        
-        panel.add(scrollPane, BorderLayout.CENTER);
-        return panel;
-    }
-
-    private JPanel criarPanelStatus() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, COR_BORDA));
-        panel.setBackground(new Color(41, 128, 185));
-        
-        JLabel lblInfo = new JLabel("Dica: Use Ativar/Desativar para itens temporariamente indisponíveis");
-        lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblInfo.setForeground(Color.GRAY);
-        
-        JLabel lblContador = new JLabel("0 itens selecionados");
-        lblContador.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblContador.setForeground(Color.GRAY);
-        
-        panel.add(lblInfo, BorderLayout.WEST);
-        panel.add(lblContador, BorderLayout.EAST);
-        
-        return panel;
-    }
-
+    
     private void aplicarEstilos() {
-        // Estilo para botão Novo Item
-        btnAddProduto.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnAddProduto.setBackground(COR_PRIMARIA);
         btnAddProduto.setForeground(Color.WHITE);
-        btnAddProduto.setFocusPainted(false);
-        btnAddProduto.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(COR_PRIMARIA.darker()),
-            BorderFactory.createEmptyBorder(8, 15, 8, 15)
-        ));
-
-        // Estilo para botões secundários
-        estiloBotaoSecundario(btnEditarProduto);
-        estiloBotaoSecundario(btnRemoverProduto);
-        estiloBotaoSecundario(btnBuscar);
+        btnAddProduto.setFont(new Font("Segoe UI", Font.BOLD, 14));
         
-        // Estilo especial para Ativar/Desativar
-        btnAtivarDesativar.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnAtivarDesativar.setBackground(new Color(52, 152, 219));
-        btnAtivarDesativar.setForeground(Color.WHITE);
-        btnAtivarDesativar.setFocusPainted(false);
-        btnAtivarDesativar.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(41, 128, 185)),
-            BorderFactory.createEmptyBorder(6, 12, 6, 12)
-        ));
-
-        // Estilo para campos de busca e combobox
-        txtBusca.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        txtBusca.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(COR_BORDA),
-            BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
-
-        cmbCategoria.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        cmbStatus.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        // Estilizar tabela
+        tabelaProdutos.getTableHeader().setBackground(COR_PRIMARIA);
+        tabelaProdutos.getTableHeader().setForeground(Color.WHITE);
+        tabelaProdutos.setRowHeight(30);
+        tabelaProdutos.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        
+        // Estatísticas
+        lblTotalProdutos.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblProdutosAtivos.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        lblProdutosAtivos.setForeground(COR_VERDE);
     }
-
-    private void estiloBotaoSecundario(JButton botao) {
-        botao.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        botao.setBackground(Color.WHITE);
-        botao.setForeground(COR_TEXTO);
-        botao.setFocusPainted(false);
-        botao.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(COR_BORDA),
-            BorderFactory.createEmptyBorder(6, 12, 6, 12)
-        ));
+    
+    private void configurarEventos() {
+        btnAddProduto.addActionListener(e -> abrirFormularioCadastro());
+        btnEditarProduto.addActionListener(e -> editarProduto());
+        btnRemoverProduto.addActionListener(e -> removerProduto());
+        btnAtivarDesativar.addActionListener(e -> alternarStatusProduto());
+        btnBuscar.addActionListener(e -> buscarProdutos());
+        cmbStatus.addActionListener(e -> filtrarPorStatus());
         
-        // Efeito hover
-        botao.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                botao.setBackground(new Color(245, 245, 245));
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                botao.setBackground(Color.WHITE);
+        tabelaProdutos.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    editarProduto();
+                }
             }
         });
-    }
-
-    private void estiloLabelEstatistica(JLabel label, Color corTexto, String tooltip) {
-        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        label.setForeground(corTexto);
-        label.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(COR_BORDA),
-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
-        ));
-        label.setBackground(new Color(250, 250, 250));
-        label.setOpaque(true);
-        label.setToolTipText(tooltip);
-    }
-
-    private void carregarDadosExemplo() {
-        // Dados de exemplo para lanchonete
-        String[] colunas = {"Código", "Item", "Categoria", "Preço", "Estoque", "Status", "Vendas"};
-        Object[][] dados = {};
         
-        tabelaProdutos.setModel(new javax.swing.table.DefaultTableModel(dados, colunas));
-        atualizarEstatisticas(0, 0);
+        txtBusca.addActionListener(e -> buscarProdutos());
     }
-
-    public void atualizarEstatisticas(int totalItens, int itensAtivos) {
-        lblTotalProdutos.setText("Itens: " + totalItens);
-        lblProdutosAtivos.setText("Ativos: " + itensAtivos);
+    
+    private void carregarDados() {
+        tableModel.setRowCount(0);
+        java.util.List<Produto> produtos = produtoController.listarProdutos();
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        
+        for (Produto p : produtos) {
+            Object[] row = {
+                p.getId_produto(),
+                p.getCd_produto(),
+                p.getNm_produto(),
+                String.format("R$ %.2f", p.getVl_produto()),
+                p.getSt_produto().equals("A") ? "Ativo" : "Inativo",
+                p.getDt_validade() != null ? sdf.format(p.getDt_validade()) : "N/A",
+                p.getDt_fabricacao() != null ? sdf.format(p.getDt_fabricacao()) : "N/A"
+            };
+            tableModel.addRow(row);
+        }
+        
+        atualizarEstatisticas();
+    }
+    
+    private void atualizarEstatisticas() {
+        long total = produtoController.contarTotalProdutos();
+        long ativos = produtoController.contarProdutosAtivos();
+        
+        lblTotalProdutos.setText("Total: " + total);
+        lblProdutosAtivos.setText("Ativos: " + ativos);
+    }
+    
+    private void abrirFormularioCadastro() {
+        JDialog dialog = new JDialog(this, "Cadastrar Produto", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(400, 350);
+        dialog.setLocationRelativeTo(this);
+        
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        
+        // Código
+        gbc.gridx = 0; gbc.gridy = 0;
+        panel.add(new JLabel("Código:*"), gbc);
+        gbc.gridx = 1;
+        JTextField txtCodigo = new JTextField(15);
+        panel.add(txtCodigo, gbc);
+        
+        // Nome
+        gbc.gridx = 0; gbc.gridy = 1;
+        panel.add(new JLabel("Nome:*"), gbc);
+        gbc.gridx = 1;
+        JTextField txtNome = new JTextField(20);
+        panel.add(txtNome, gbc);
+        
+        // Preço
+        gbc.gridx = 0; gbc.gridy = 2;
+        panel.add(new JLabel("Preço:*"), gbc);
+        gbc.gridx = 1;
+        JTextField txtPreco = new JTextField(10);
+        panel.add(txtPreco, gbc);
+        
+        // Status
+        gbc.gridx = 0; gbc.gridy = 3;
+        panel.add(new JLabel("Status:*"), gbc);
+        gbc.gridx = 1;
+        JComboBox<String> cmbStatus = new JComboBox<>(new String[]{"A - Ativo", "I - Inativo"});
+        panel.add(cmbStatus, gbc);
+        
+        // Validade
+        gbc.gridx = 0; gbc.gridy = 4;
+        panel.add(new JLabel("Validade:"), gbc);
+        gbc.gridx = 1;
+        JTextField txtValidade = new JTextField(10);
+        txtValidade.setText("YYYY-MM-DD");
+        panel.add(txtValidade, gbc);
+        
+        // Fabricação
+        gbc.gridx = 0; gbc.gridy = 5;
+        panel.add(new JLabel("Fabricação:"), gbc);
+        gbc.gridx = 1;
+        JTextField txtFabricacao = new JTextField(10);
+        txtFabricacao.setText("YYYY-MM-DD");
+        panel.add(txtFabricacao, gbc);
+        
+        // Botões
+        JPanel panelBotoes = new JPanel();
+        JButton btnSalvar = new JButton("Salvar");
+        JButton btnCancelar = new JButton("Cancelar");
+        
+        btnSalvar.addActionListener(e -> {
+            try {
+                Integer codigo = Integer.parseInt(txtCodigo.getText());
+                String nome = txtNome.getText();
+                Double preco = Double.parseDouble(txtPreco.getText());
+                String status = ((String) cmbStatus.getSelectedItem()).substring(0, 1);
+                
+                Date validade = null;
+                Date fabricacao = null;
+                
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                
+                if (!txtValidade.getText().equals("YYYY-MM-DD")) {
+                    validade = sdf.parse(txtValidade.getText());
+                }
+                
+                if (!txtFabricacao.getText().equals("YYYY-MM-DD")) {
+                    fabricacao = sdf.parse(txtFabricacao.getText());
+                }
+                
+                boolean sucesso = produtoController.cadastrarProduto(codigo, nome, preco, status);
+                
+                if (sucesso) {
+                    JOptionPane.showMessageDialog(dialog, "Produto cadastrado com sucesso!");
+                    carregarDados();
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Erro ao cadastrar produto!", "Erro", JOptionPane.ERROR_MESSAGE);
+                }
+                
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(dialog, "Erro: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        
+        btnCancelar.addActionListener(e -> dialog.dispose());
+        
+        panelBotoes.add(btnSalvar);
+        panelBotoes.add(btnCancelar);
+        
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.add(panelBotoes, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
+    
+    private void editarProduto() {
+        int selectedRow = tabelaProdutos.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto para editar!");
+            return;
+        }
+        
+        Integer produtoId = (Integer) tableModel.getValueAt(selectedRow, 0);
+        Produto produto = produtoController.buscarProdutoPorId(produtoId);
+        
+        if (produto != null) {
+            JOptionPane.showMessageDialog(this, 
+                "Produto selecionado: " + produto.getNm_produto() + 
+                "\nImplemente a tela de edição aqui.");
+        }
+    }
+    
+    private void removerProduto() {
+        int selectedRow = tabelaProdutos.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto para remover!");
+            return;
+        }
+        
+        Integer produtoId = (Integer) tableModel.getValueAt(selectedRow, 0);
+        String produtoNome = (String) tableModel.getValueAt(selectedRow, 2);
+        
+        int confirm = JOptionPane.showConfirmDialog(this, 
+            "Remover produto: " + produtoNome + "?", 
+            "Confirmar", 
+            JOptionPane.YES_NO_OPTION);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            boolean sucesso = produtoController.removerProduto(produtoId);
+            if (sucesso) {
+                JOptionPane.showMessageDialog(this, "Produto removido com sucesso!");
+                carregarDados();
+            } else {
+                JOptionPane.showMessageDialog(this, "Erro ao remover produto!", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void alternarStatusProduto() {
+        int selectedRow = tabelaProdutos.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Selecione um produto!");
+            return;
+        }
+        
+        Integer produtoId = (Integer) tableModel.getValueAt(selectedRow, 0);
+        boolean sucesso = produtoController.alternarStatusProduto(produtoId);
+        
+        if (sucesso) {
+            JOptionPane.showMessageDialog(this, "Status alterado com sucesso!");
+            carregarDados();
+        } else {
+            JOptionPane.showMessageDialog(this, "Erro ao alterar status!", "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void buscarProdutos() {
+        String termo = txtBusca.getText().trim();
+        if (termo.isEmpty()) {
+            carregarDados();
+            return;
+        }
+        
+        tableModel.setRowCount(0);
+        java.util.List<Produto> resultados;
+        
+        try {
+            Integer codigo = Integer.parseInt(termo);
+            Produto produto = produtoController.buscarProdutoPorCodigo(codigo);
+            if (produto != null) {
+                adicionarProdutoNaTabela(produto);
+            }
+        } catch (NumberFormatException e) {
+            resultados = produtoController.buscarProdutosPorNome(termo);
+            for (Produto p : resultados) {
+                adicionarProdutoNaTabela(p);
+            }
+        }
+        
+        atualizarEstatisticas();
+    }
+    
+    private void filtrarPorStatus() {
+        String status = (String) cmbStatus.getSelectedItem();
+        
+        tableModel.setRowCount(0);
+        java.util.List<Produto> produtos;
+        
+        if ("Todos".equals(status)) {
+            produtos = produtoController.listarProdutos();
+        } else if ("Ativos".equals(status)) {
+            produtos = produtoController.listarProdutosAtivos();
+        } else {
+            produtos = produtoController.listarProdutosInativos();
+        }
+        
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        
+        for (Produto p : produtos) {
+            Object[] row = {
+                p.getId_produto(),
+                p.getCd_produto(),
+                p.getNm_produto(),
+                String.format("R$ %.2f", p.getVl_produto()),
+                p.getSt_produto().equals("A") ? "Ativo" : "Inativo",
+                p.getDt_validade() != null ? sdf.format(p.getDt_validade()) : "N/A",
+                p.getDt_fabricacao() != null ? sdf.format(p.getDt_fabricacao()) : "N/A"
+            };
+            tableModel.addRow(row);
+        }
+        
+        atualizarEstatisticas();
+    }
+    
+    private void adicionarProdutoNaTabela(Produto produto) {
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        
+        Object[] row = {
+            produto.getId_produto(),
+            produto.getCd_produto(),
+            produto.getNm_produto(),
+            String.format("R$ %.2f", produto.getVl_produto()),
+            produto.getSt_produto().equals("A") ? "Ativo" : "Inativo",
+            produto.getDt_validade() != null ? sdf.format(produto.getDt_validade()) : "N/A",
+            produto.getDt_fabricacao() != null ? sdf.format(produto.getDt_fabricacao()) : "N/A"
+        };
+        tableModel.addRow(row);
+    }
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            ProdutoForm form = new ProdutoForm();
+            form.setVisible(true);
+        });
     }
 }

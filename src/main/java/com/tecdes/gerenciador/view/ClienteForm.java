@@ -1,11 +1,14 @@
 package com.tecdes.gerenciador.view;
 
+import com.tecdes.gerenciador.controller.ClienteController;
+import com.tecdes.gerenciador.model.entity.Cliente;
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 public class ClienteForm extends JFrame {
     private JTable tabelaClientes;
@@ -26,6 +29,8 @@ public class ClienteForm extends JFrame {
         initComponents();
         layoutComponents();
         aplicarEstilos();
+        configurarEventos();
+        carregarClientes();
     }
 
     private void initComponents() {
@@ -49,6 +54,16 @@ public class ClienteForm extends JFrame {
         // Configurar tabela
         tabelaClientes = new JTable();
         tabelaClientes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        // Configurar modelo da tabela
+        String[] colunas = {"ID", "Nome", "CPF", "Email"};
+        Object[][] dados = {}; // Vazio inicialmente
+        tabelaClientes.setModel(new javax.swing.table.DefaultTableModel(dados, colunas) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        });
     }
 
     private void layoutComponents() {
@@ -71,13 +86,13 @@ public class ClienteForm extends JFrame {
         // === STATUS BAR ===
         JPanel panelStatus = criarPanelStatus();
 
-        // Montar layout principal CORRIGIDO
+        // Montar layout principal
         panelPrincipal.add(panelCabecalho, BorderLayout.NORTH);
-        panelPrincipal.add(panelFerramentas, BorderLayout.CENTER); // Mudado para CENTER
-        panelPrincipal.add(panelTabela, BorderLayout.SOUTH); // Mudado para SOUTH
+        panelPrincipal.add(panelFerramentas, BorderLayout.CENTER);
+        panelPrincipal.add(panelTabela, BorderLayout.SOUTH);
         
         add(panelPrincipal, BorderLayout.CENTER);
-        add(panelStatus, BorderLayout.SOUTH); // Status bar separada
+        add(panelStatus, BorderLayout.SOUTH);
     }
 
     private JPanel criarPanelCabecalho() {
@@ -211,5 +226,293 @@ public class ClienteForm extends JFrame {
                 botao.setBackground(Color.WHITE);
             }
         });
+    }
+    
+    private void configurarEventos() {
+        btnAddCliente.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                cadastrarCliente();
+            }
+        });
+        
+        btnEditarCliente.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                editarCliente();
+            }
+        });
+        
+        btnRemoverCliente.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                removerCliente();
+            }
+        });
+        
+        btnBuscar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                buscarCliente();
+            }
+        });
+    }
+    
+    private void carregarClientes() {
+        try {
+            ClienteController controller = new ClienteController();
+            List<Cliente> clientes = controller.listar();
+            
+            // Limpar tabela
+            javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tabelaClientes.getModel();
+            model.setRowCount(0);
+            
+            // Adicionar clientes na tabela
+            for (Cliente cliente : clientes) {
+                model.addRow(new Object[]{
+                    cliente.getId_cliente(),
+                    cliente.getNm_cliente(),
+                    formatarCPF(cliente.getNr_cpf()),
+                    cliente.getDs_email()
+                });
+            }
+            
+            lblStatus.setText("Total de clientes: " + clientes.size());
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Erro ao carregar clientes: " + e.getMessage(),
+                "Erro",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void cadastrarCliente() {
+        // Painel para os campos
+        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        
+        JTextField txtNome = new JTextField();
+        JTextField txtCpf = new JTextField();
+        JTextField txtEmail = new JTextField();
+        
+        panel.add(new JLabel("Nome:"));
+        panel.add(txtNome);
+        panel.add(new JLabel("CPF:"));
+        panel.add(txtCpf);
+        panel.add(new JLabel("Email:"));
+        panel.add(txtEmail);
+        
+        int result = JOptionPane.showConfirmDialog(this, panel, 
+            "Cadastrar Novo Cliente", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                ClienteController controller = new ClienteController();
+                Cliente cliente = controller.cadastrarCliente(
+                    txtNome.getText().trim(),
+                    txtCpf.getText().trim(),
+                    txtEmail.getText().trim()
+                );
+                
+                JOptionPane.showMessageDialog(this,
+                    "Cliente cadastrado com sucesso!\nID: " + cliente.getId_cliente(),
+                    "Sucesso",
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                carregarClientes();
+                
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(this,
+                    e.getMessage(),
+                    "Erro de Validação",
+                    JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                    "Erro ao cadastrar cliente: " + e.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void editarCliente() {
+        int selectedRow = tabelaClientes.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                "Selecione um cliente para editar",
+                "Aviso",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Obter dados do cliente selecionado
+        Integer id = (Integer) tabelaClientes.getValueAt(selectedRow, 0);
+        String nome = (String) tabelaClientes.getValueAt(selectedRow, 1);
+        String cpf = (String) tabelaClientes.getValueAt(selectedRow, 2);
+        String email = (String) tabelaClientes.getValueAt(selectedRow, 3);
+        
+        // Remover formatação do CPF
+        cpf = cpf.replaceAll("\\D", "");
+        
+        // Painel para edição
+        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        
+        JTextField txtNome = new JTextField(nome);
+        JTextField txtCpf = new JTextField(cpf);
+        JTextField txtEmail = new JTextField(email);
+        
+        panel.add(new JLabel("Nome:"));
+        panel.add(txtNome);
+        panel.add(new JLabel("CPF:"));
+        panel.add(txtCpf);
+        panel.add(new JLabel("Email:"));
+        panel.add(txtEmail);
+        
+        int result = JOptionPane.showConfirmDialog(this, panel, 
+            "Editar Cliente", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                ClienteController controller = new ClienteController();
+                Cliente cliente = controller.editarCliente(
+                    id,
+                    txtNome.getText().trim(),
+                    txtCpf.getText().trim(),
+                    txtEmail.getText().trim()
+                );
+                
+                JOptionPane.showMessageDialog(this,
+                    "Cliente atualizado com sucesso!",
+                    "Sucesso",
+                    JOptionPane.INFORMATION_MESSAGE);
+                
+                carregarClientes();
+                
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(this,
+                    e.getMessage(),
+                    "Erro de Validação",
+                    JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                    "Erro ao atualizar cliente: " + e.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void removerCliente() {
+        int selectedRow = tabelaClientes.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this,
+                "Selecione um cliente para remover",
+                "Aviso",
+                JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // Obter dados do cliente selecionado
+        Integer id = (Integer) tabelaClientes.getValueAt(selectedRow, 0);
+        String nome = (String) tabelaClientes.getValueAt(selectedRow, 1);
+        
+        int confirm = JOptionPane.showConfirmDialog(this,
+            "Deseja realmente remover o cliente:\n" + nome + " (ID: " + id + ")?",
+            "Confirmar Exclusão",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
+        
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                ClienteController controller = new ClienteController();
+                boolean sucesso = controller.removerCliente(id);
+                
+                if (sucesso) {
+                    JOptionPane.showMessageDialog(this,
+                        "Cliente removido com sucesso!",
+                        "Sucesso",
+                        JOptionPane.INFORMATION_MESSAGE);
+                    
+                    carregarClientes();
+                }
+                
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(this,
+                    e.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this,
+                    "Erro ao remover cliente: " + e.getMessage(),
+                    "Erro",
+                    JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+    
+    private void buscarCliente() {
+        String busca = txtBusca.getText().trim();
+        if (busca.isEmpty()) {
+            carregarClientes();
+            return;
+        }
+        
+        try {
+            ClienteController controller = new ClienteController();
+            List<Cliente> todosClientes = controller.listar();
+            
+            // Filtrar localmente por nome (case insensitive)
+            List<Cliente> filtrados = todosClientes.stream()
+                .filter(c -> c.getNm_cliente().toLowerCase().contains(busca.toLowerCase()))
+                .toList();
+            
+            // Limpar tabela
+            javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) tabelaClientes.getModel();
+            model.setRowCount(0);
+            
+            // Adicionar clientes filtrados
+            for (Cliente cliente : filtrados) {
+                model.addRow(new Object[]{
+                    cliente.getId_cliente(),
+                    cliente.getNm_cliente(),
+                    formatarCPF(cliente.getNr_cpf()),
+                    cliente.getDs_email()
+                });
+            }
+            
+            lblStatus.setText("Encontrados: " + filtrados.size() + " cliente(s)");
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Erro na busca: " + e.getMessage(),
+                "Erro",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private String formatarCPF(String cpf) {
+        if (cpf == null || cpf.length() != 11) {
+            return cpf;
+        }
+        return cpf.substring(0, 3) + "." + 
+               cpf.substring(3, 6) + "." + 
+               cpf.substring(6, 9) + "-" + 
+               cpf.substring(9);
+    }
+    
+    // Método para testar o form
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            
+            SwingUtilities.invokeLater(() -> {
+                ClienteForm form = new ClienteForm();
+                form.setVisible(true);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

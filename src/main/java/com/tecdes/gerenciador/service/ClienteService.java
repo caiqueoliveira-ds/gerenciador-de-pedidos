@@ -1,10 +1,17 @@
 package com.tecdes.gerenciador.service;
+
 import com.tecdes.gerenciador.model.entity.Cliente;
 import com.tecdes.gerenciador.repository.IClienteRepository;
+import com.tecdes.gerenciador.repository.ClienteRepository;
+import java.util.List;
 
 public class ClienteService {
     
     private final IClienteRepository clienteRepository;
+    
+    public ClienteService() {
+        this.clienteRepository = new ClienteRepository();
+    }
     
     public ClienteService(IClienteRepository clienteRepository) {
         this.clienteRepository = clienteRepository;
@@ -30,7 +37,7 @@ public class ClienteService {
         }
         
         // Verificar se CPF está sendo alterado e se já existe
-        if (!cliente.getNr_cpf().equals(cpf) && clienteRepository.existsByCpf(cpf)) {
+        if (!cliente.getNr_cpf().equals(cpf) ) {
             throw new IllegalArgumentException("CPF já cadastrado: " + cpf);
         }
         
@@ -53,6 +60,10 @@ public class ClienteService {
         return clienteRepository.findByCpf(cpf);
     }
     
+    public List<Cliente> listarTodos() {
+        return clienteRepository.findAll();
+    }
+    
     private void validarDadosCliente(String nome, String cpf, String email) {
         if (nome == null || nome.trim().isEmpty()) {
             throw new IllegalArgumentException("Nome do cliente é obrigatório.");
@@ -62,11 +73,15 @@ public class ClienteService {
             throw new IllegalArgumentException("CPF do cliente é obrigatório.");
         }
         
+        // Remove formatação para validação
+        cpf = cpf.replaceAll("\\D", "");
+        
         // Validação básica de CPF (11 dígitos)
-        if (!cpf.matches("\\d{11}")) {
+        if (cpf.length() != 11) {
             throw new IllegalArgumentException("CPF inválido. Deve conter 11 dígitos.");
         }
         
+    
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email do cliente é obrigatório.");
         }
@@ -78,7 +93,19 @@ public class ClienteService {
     }
     
     public boolean validarCPF(String cpf) {
-        if (cpf == null || cpf.length() != 11) {
+        if (cpf == null) {
+            return false;
+        }
+        
+        // Remove formatação
+        cpf = cpf.replaceAll("\\D", "");
+        
+        if (cpf.length() != 11) {
+            return false;
+        }
+        
+        // Verifica se todos os dígitos são iguais
+        if (cpf.matches("(\\d)\\1{10}")) {
             return false;
         }
         
@@ -113,5 +140,22 @@ public class ClienteService {
         } catch (Exception e) {
             return false;
         }
+    }
+    
+    public String formatarCPF(String cpf) {
+        if (cpf == null || cpf.isEmpty()) {
+            return cpf;
+        }
+        
+        cpf = cpf.replaceAll("\\D", "");
+        
+        if (cpf.length() != 11) {
+            return cpf;
+        }
+        
+        return cpf.substring(0, 3) + "." + 
+               cpf.substring(3, 6) + "." + 
+               cpf.substring(6, 9) + "-" + 
+               cpf.substring(9);
     }
 }

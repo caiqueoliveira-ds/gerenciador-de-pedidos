@@ -1,21 +1,27 @@
 package com.tecdes.gerenciador;
 
-import java.util.List;
-import com.tecdes.gerenciador.controller.MainController;
-import com.tecdes.gerenciador.model.entity.Pedido;
-import com.tecdes.gerenciador.repository.PedidoRepository;
-import com.tecdes.gerenciador.util.RelatorioUtil;
+import com.tecdes.gerenciador.config.ConnectionFactory;
 import com.tecdes.gerenciador.view.MainView;
+import javax.swing.*;
 
 public class Main {
     public static void main(String[] args) {
-        
-        MainView main = new MainView();
-        new MainController(main);
-        main.setVisible(true);
-    
-        PedidoRepository pedidoRepository = new PedidoRepository();
-        List<Pedido> pedidos = pedidoRepository.findAll();
-        RelatorioUtil.gerarRelatorioPedidos(pedidos, "relatorio.txt");
+        try {
+            // Define look and feel do sistema
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            
+            // Inicia a aplicação
+            SwingUtilities.invokeLater(() -> {
+                MainView mainView = new MainView();
+                mainView.setVisible(true);
+            });
+            
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null,
+                "Erro ao iniciar o sistema: " + e.getMessage(),
+                "Erro",
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
     }
 }

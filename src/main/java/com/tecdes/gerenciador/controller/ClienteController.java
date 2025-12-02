@@ -1,75 +1,46 @@
 package com.tecdes.gerenciador.controller;
 
-import java.util.ArrayList;
+import com.tecdes.gerenciador.model.entity.Cliente;
+import com.tecdes.gerenciador.service.ClienteService;
 import java.util.List;
 
-import com.tecdes.gerenciador.model.entity.Cliente;
-
 public class ClienteController {
-
-    private final List<Cliente> bancoClientes = new ArrayList<>();
-
+    
+    private final ClienteService clienteService;
+    
+    public ClienteController() {
+        this.clienteService = new ClienteService();
+    }
+    
+    public ClienteController(ClienteService clienteService) {
+        this.clienteService = clienteService;
+    }
+    
     public List<Cliente> listar() {
-        return bancoClientes;
+        return clienteService.listarTodos();
     }
-
-    public Cliente cadastrarCliente(
-            Integer id,
-            String nome,
-            String cpf,
-            String email
-    ) {
-        Cliente c = new Cliente();
-        c.setId_cliente(id);
-        c.setNm_cliente(nome);
-        c.setNr_cpf(cpf);     
-        c.setDs_email(email);
-
-        bancoClientes.add(c);
-        return c;
+    
+    public Cliente cadastrarCliente(String nome, String cpf, String email) {
+        return clienteService.cadastrarCliente(nome, cpf, email);
     }
-
-    public Cliente editarCliente(
-            Integer id,
-            String nome,
-            String cpf,
-            String email
-    ) {
-        Cliente c = buscarPorId(id);
-
-        if (c == null) {
-            throw new IllegalArgumentException("Cliente não encontrado para edição.");
-        }
-
-        c.setNm_cliente(nome);
-        c.setNr_cpf(cpf);
-        c.setDs_email(email);
-
-        return c;
+    
+    public Cliente editarCliente(Integer id, String nome, String cpf, String email) {
+        return clienteService.atualizarCliente(id, nome, cpf, email);
     }
-
+    
     public boolean removerCliente(Integer id) {
-        Cliente c = buscarPorId(id);
-
-        if (c != null) {
-            bancoClientes.remove(c);
-            return true;
-        }
-
-        return false;
+        return clienteService.removerCliente(id);
     }
-
+    
     public Cliente buscarPorId(Integer id) {
-        return bancoClientes.stream()
-                .filter(c -> c.getId_cliente().equals(id))
-                .findFirst()
-                .orElse(null);
+        return clienteService.buscarPorId(id);
     }
-
+    
     public Cliente buscarPorCpf(String cpf) {
-        return bancoClientes.stream()
-                .filter(c -> c.getNr_cpf().equals(cpf))
-                .findFirst()
-                .orElse(null);
+        return clienteService.buscarPorCpf(cpf);
+    }
+    
+    public boolean validarCPF(String cpf) {
+        return clienteService.validarCPF(cpf);
     }
 }

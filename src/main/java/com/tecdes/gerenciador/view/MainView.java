@@ -195,6 +195,16 @@ public class MainView extends JFrame {
         });
     }
 
+
+    private void criarBotaoProdutos() {
+        JButton btnProdutos = new JButton("Produtos");
+        btnProdutos.addActionListener(e -> {
+            ProdutoForm produtoForm = new ProdutoForm();
+            produtoForm.setVisible(true);
+        });
+
+    }
+
     private void configurarEventos() {
         btnCliente.addActionListener(e -> { 
             abrirTelaClientes();

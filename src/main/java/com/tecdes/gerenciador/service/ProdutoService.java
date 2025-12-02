@@ -1,6 +1,8 @@
 package com.tecdes.gerenciador.service;
+
 import com.tecdes.gerenciador.model.entity.Produto;
 import com.tecdes.gerenciador.repository.IProdutoRepository;
+import com.tecdes.gerenciador.repository.ProdutoRepository;
 
 import java.util.Date;
 import java.util.List;
@@ -9,31 +11,43 @@ public class ProdutoService {
     
     private final IProdutoRepository produtoRepository;
     
+    public ProdutoService() {
+        this.produtoRepository = new ProdutoRepository();
+    }
+    
     public ProdutoService(IProdutoRepository produtoRepository) {
         this.produtoRepository = produtoRepository;
     }
     
     public Produto cadastrarProduto(Integer codigo, String nome, Double valor, String status) {
-        validarDadosProduto(codigo, nome, valor);
+        validarDados(codigo, nome, valor);
+        
+        if (produtoRepository.existsByCodigo(codigo)) {
+            throw new IllegalArgumentException("Código já existe: " + codigo);
+        }
         
         Produto produto = new Produto();
         produto.setCd_produto(codigo);
         produto.setNm_produto(nome);
         produto.setVl_produto(valor);
-        produto.setSt_produto(status != null ? status : "ATIVO");
+        produto.setSt_produto(status != null ? status : "A"); // 'A' para ativo conforme seu script SQL
         
         return produtoRepository.save(produto);
     }
     
-    public Produto cadastrarProdutoCompleto(Integer codigo, String nome, String status, 
-                                           Double valor, Date validade, Date fabricacao) {
-        validarDadosProduto(codigo, nome, valor);
+    public Produto cadastrarProdutoCompleto(Integer codigo, String nome, Double valor, String status, 
+                                           Date validade, Date fabricacao) {
+        validarDados(codigo, nome, valor);
+        
+        if (produtoRepository.existsByCodigo(codigo)) {
+            throw new IllegalArgumentException("Código já existe: " + codigo);
+        }
         
         Produto produto = new Produto();
         produto.setCd_produto(codigo);
         produto.setNm_produto(nome);
-        produto.setSt_produto(status != null ? status : "ATIVO");
         produto.setVl_produto(valor);
+        produto.setSt_produto(status != null ? status : "A");
         produto.setDt_validade(validade);
         produto.setDt_fabricacao(fabricacao);
         
@@ -42,16 +56,16 @@ public class ProdutoService {
     
     public Produto atualizarProduto(Integer id, Integer codigo, String nome, String status, 
                                    Double valor, Date validade, Date fabricacao) {
-        validarDadosProduto(codigo, nome, valor);
+        validarDados(codigo, nome, valor);
         
         Produto produto = produtoRepository.findById(id);
         if (produto == null) {
-            throw new IllegalArgumentException("Produto não encontrado com ID: " + id);
+            throw new IllegalArgumentException("Produto não encontrado: " + id);
         }
         
-        // Verificar se código está sendo alterado e se já existe
+        // Verificar se código foi alterado
         if (!produto.getCd_produto().equals(codigo) && produtoRepository.existsByCodigo(codigo)) {
-            throw new IllegalArgumentException("Código de produto já existe: " + codigo);
+            throw new IllegalArgumentException("Código já existe: " + codigo);
         }
         
         produto.setCd_produto(codigo);
@@ -91,7 +105,7 @@ public class ProdutoService {
     public boolean ativarProduto(Integer id) {
         Produto produto = produtoRepository.findById(id);
         if (produto != null) {
-            produto.setSt_produto("ATIVO");
+            produto.setSt_produto("A"); // 'A' para ativo
             produtoRepository.update(produto);
             return true;
         }
@@ -101,33 +115,38 @@ public class ProdutoService {
     public boolean desativarProduto(Integer id) {
         Produto produto = produtoRepository.findById(id);
         if (produto != null) {
-            produto.setSt_produto("INATIVO");
+            produto.setSt_produto("I"); // 'I' para inativo
             produtoRepository.update(produto);
             return true;
         }
         return false;
     }
     
-    private void validarDadosProduto(Integer codigo, String nome, Double valor) {
+    public boolean alternarStatus(Integer id) {
+        Produto produto = produtoRepository.findById(id);
+        if (produto != null) {
+            if ("A".equals(produto.getSt_produto())) {
+                produto.setSt_produto("I");
+            } else {
+                produto.setSt_produto("A");
+            }
+            produtoRepository.update(produto);
+            return true;
+        }
+        return false;
+    }
+    
+    private void validarDados(Integer codigo, String nome, Double valor) {
         if (codigo == null || codigo <= 0) {
-            throw new IllegalArgumentException("Código do produto é obrigatório e deve ser maior que zero.");
+            throw new IllegalArgumentException("Código inválido");
         }
         
-        if (nome == null || nome.trim().isEmpty()) {
-            throw new IllegalArgumentException("Nome do produto é obrigatório.");
+        if (nome == null || nome.trim().isEmpty() || nome.length() > 80) {
+            throw new IllegalArgumentException("Nome deve ter entre 1 e 80 caracteres");
         }
         
         if (valor == null || valor < 0) {
-            throw new IllegalArgumentException("Valor do produto é obrigatório e não pode ser negativo.");
+            throw new IllegalArgumentException("Valor inválido");
         }
-    }
-    
-    public boolean verificarValidade(Produto produto) {
-        if (produto == null || produto.getDt_validade() == null) {
-            return true; // Produto sem validade definida
-        }
-        
-        Date hoje = new Date();
-        return !produto.getDt_validade().before(hoje);
     }
 }

@@ -1,75 +1,89 @@
 package com.tecdes.gerenciador.controller;
 
-import java.sql.Date;
-import java.util.ArrayList;
+import com.tecdes.gerenciador.model.entity.Produto;
+import com.tecdes.gerenciador.service.ProdutoService;
+
+import java.util.Date;
 import java.util.List;
 
-import com.tecdes.gerenciador.model.entity.Produto;
-
 public class ProdutoController {
-
-    private final List<Produto> bancoProdutos = new ArrayList<>();
-
-    public List<Produto> listar() {
-        return bancoProdutos;
+    
+    private final ProdutoService produtoService;
+    
+    public ProdutoController() {
+        this.produtoService = new ProdutoService();
     }
-
-    public Produto cadastrarProduto(
-            Integer cd_produto,
-            String nome,
-            String status,
-            Double valor,
-            Date validade,
-            Date fabricacao
-    ) {
-        Produto p = new Produto();
-        p.setCd_produto(cd_produto);
-        p.setNm_produto(nome);
-        p.setSt_produto(status);
-        p.setVl_produto(valor);
-        p.setDt_validade(validade);
-        p.setDt_fabricacao(fabricacao);
-
-        bancoProdutos.add(p);
-        return p;
-    }
-
-    public Produto editarProduto(
-            Integer cd_produto,
-            String nome,
-            String status,
-            Double valor,
-            Date validade,
-            Date fabricacao
-    ) {
-        Produto p = buscarPorCodigo(cd_produto);
-
-        if (p == null) {
-            throw new IllegalArgumentException("Produto não encontrado para edição.");
-        }
-
-        p.setNm_produto(nome);
-        p.setSt_produto(status);
-        p.setVl_produto(valor);
-        p.setDt_validade(validade);
-        p.setDt_fabricacao(fabricacao);
-
-        return p;
-    }
-
-    public boolean removerProduto(Integer codigo) {
-        Produto p = buscarPorCodigo(codigo);
-        if (p != null) {
-            bancoProdutos.remove(p);
+    
+    // Métodos CRUD para a view
+    
+    public boolean cadastrarProduto(Integer codigo, String nome, Double preco, String status) {
+        try {
+            produtoService.cadastrarProduto(codigo, nome, preco, status);
             return true;
+        } catch (Exception e) {
+            System.err.println("Erro ao cadastrar: " + e.getMessage());
+            return false;
         }
-        return false;
     }
-
-    public Produto buscarPorCodigo(Integer codigo) {
-        return bancoProdutos.stream()
-                .filter(p -> p.getCd_produto().equals(codigo))
-                .findFirst()
-                .orElse(null);
+    
+    public boolean atualizarProduto(Integer id, Integer codigo, String nome, String status, 
+                                   Double preco, Date validade, Date fabricacao) {
+        try {
+            produtoService.atualizarProduto(id, codigo, nome, status, preco, validade, fabricacao);
+            return true;
+        } catch (Exception e) {
+            System.err.println("Erro ao atualizar: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    public boolean removerProduto(Integer id) {
+        return produtoService.removerProduto(id);
+    }
+    
+    public Produto buscarProdutoPorId(Integer id) {
+        return produtoService.buscarPorId(id);
+    }
+    
+    public Produto buscarProdutoPorCodigo(Integer codigo) {
+        return produtoService.buscarPorCodigo(codigo);
+    }
+    
+    public List<Produto> buscarProdutosPorNome(String nome) {
+        return produtoService.buscarPorNome(nome);
+    }
+    
+    public List<Produto> listarProdutos() {
+        return produtoService.listarTodos();
+    }
+    
+    public List<Produto> listarProdutosAtivos() {
+        return produtoService.buscarPorStatus("A");
+    }
+    
+    public List<Produto> listarProdutosInativos() {
+        return produtoService.buscarPorStatus("I");
+    }
+    
+    public boolean ativarProduto(Integer id) {
+        return produtoService.ativarProduto(id);
+    }
+    
+    public boolean desativarProduto(Integer id) {
+        return produtoService.desativarProduto(id);
+    }
+    
+    public boolean alternarStatusProduto(Integer id) {
+        return produtoService.alternarStatus(id);
+    }
+    
+    public long contarProdutosAtivos() {
+        return produtoService.listarTodos().stream()
+                .filter(p -> "A".equals(p.getSt_produto()))
+                .count();
+    }
+    
+    public long contarTotalProdutos() {
+        return produtoService.listarTodos().size();
     }
 }
