@@ -1,18 +1,16 @@
 package com.tecdes.gerenciador.model.entity;
 
-import java.util.Date;
-
 public class Produto {
     private Integer id_produto;
     private Integer cd_produto;
     private String nm_produto;
     private String st_produto;
     private Double vl_produto;
-    private Date dt_validade;
-    private Date dt_fabricacao;
     
+    // Construtor padrão
     public Produto() {}
     
+    // Construtor com parâmetros
     public Produto(Integer codigo, String nome, Double valor, String status) {
         this.cd_produto = codigo;
         this.nm_produto = nome;
@@ -35,12 +33,6 @@ public class Produto {
     
     public Double getVl_produto() { return vl_produto; }
     public void setVl_produto(Double vl_produto) { this.vl_produto = vl_produto; }
-    
-    public Date getDt_validade() { return dt_validade; }
-    public void setDt_validade(Date dt_validade) { this.dt_validade = dt_validade; }
-    
-    public Date getDt_fabricacao() { return dt_fabricacao; }
-    public void setDt_fabricacao(Date dt_fabricacao) { this.dt_fabricacao = dt_fabricacao; }
     
     @Override
     public String toString() {

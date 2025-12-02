@@ -4,7 +4,6 @@ import com.tecdes.gerenciador.model.entity.Produto;
 import com.tecdes.gerenciador.repository.IProdutoRepository;
 import com.tecdes.gerenciador.repository.ProdutoRepository;
 
-import java.util.Date;
 import java.util.List;
 
 public class ProdutoService {
@@ -30,32 +29,13 @@ public class ProdutoService {
         produto.setCd_produto(codigo);
         produto.setNm_produto(nome);
         produto.setVl_produto(valor);
-        produto.setSt_produto(status != null ? status : "A"); // 'A' para ativo conforme seu script SQL
-        
-        return produtoRepository.save(produto);
-    }
-    
-    public Produto cadastrarProdutoCompleto(Integer codigo, String nome, Double valor, String status, 
-                                           Date validade, Date fabricacao) {
-        validarDados(codigo, nome, valor);
-        
-        if (produtoRepository.existsByCodigo(codigo)) {
-            throw new IllegalArgumentException("Código já existe: " + codigo);
-        }
-        
-        Produto produto = new Produto();
-        produto.setCd_produto(codigo);
-        produto.setNm_produto(nome);
-        produto.setVl_produto(valor);
         produto.setSt_produto(status != null ? status : "A");
-        produto.setDt_validade(validade);
-        produto.setDt_fabricacao(fabricacao);
         
         return produtoRepository.save(produto);
     }
     
-    public Produto atualizarProduto(Integer id, Integer codigo, String nome, String status, 
-                                   Double valor, Date validade, Date fabricacao) {
+    
+    public Produto atualizarProduto(Integer id, Integer codigo, String nome, String status, Double valor) {
         validarDados(codigo, nome, valor);
         
         Produto produto = produtoRepository.findById(id);
@@ -63,7 +43,6 @@ public class ProdutoService {
             throw new IllegalArgumentException("Produto não encontrado: " + id);
         }
         
-        // Verificar se código foi alterado
         if (!produto.getCd_produto().equals(codigo) && produtoRepository.existsByCodigo(codigo)) {
             throw new IllegalArgumentException("Código já existe: " + codigo);
         }
@@ -72,8 +51,6 @@ public class ProdutoService {
         produto.setNm_produto(nome);
         produto.setSt_produto(status != null ? status : produto.getSt_produto());
         produto.setVl_produto(valor);
-        produto.setDt_validade(validade);
-        produto.setDt_fabricacao(fabricacao);
         
         return produtoRepository.update(produto);
     }
@@ -105,7 +82,7 @@ public class ProdutoService {
     public boolean ativarProduto(Integer id) {
         Produto produto = produtoRepository.findById(id);
         if (produto != null) {
-            produto.setSt_produto("A"); // 'A' para ativo
+            produto.setSt_produto("A");
             produtoRepository.update(produto);
             return true;
         }
@@ -115,7 +92,7 @@ public class ProdutoService {
     public boolean desativarProduto(Integer id) {
         Produto produto = produtoRepository.findById(id);
         if (produto != null) {
-            produto.setSt_produto("I"); // 'I' para inativo
+            produto.setSt_produto("I");
             produtoRepository.update(produto);
             return true;
         }

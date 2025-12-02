@@ -22,8 +22,7 @@ CREATE TABLE T_GRP_PRODUTO(
     cd_produto INT NOT NULL UNIQUE,
     nm_produto VARCHAR(80) NOT NULL,
     st_produto CHAR(1) NOT NULL,
-    vl_produto DECIMAL(10,2) NOT NULL,
-
+    vl_produto DECIMAL(10,2) NOT NULL
 );
 
 CREATE TABLE T_GRP_ESTOQUE(

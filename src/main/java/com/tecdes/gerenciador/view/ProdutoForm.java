@@ -54,7 +54,7 @@ public class ProdutoForm extends JFrame {
         lblTotalProdutos = new JLabel("Total: 0");
         lblProdutosAtivos = new JLabel("Ativos: 0");
         
-        String[] colunas = {"ID", "Código", "Nome", "Preço", "Status", "Validade", "Fabricação"};
+        String[] colunas = {"ID", "Código", "Nome", "Preço", "Status"};
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -157,7 +157,6 @@ public class ProdutoForm extends JFrame {
         tableModel.setRowCount(0);
         java.util.List<Produto> produtos = produtoController.listarProdutos();
         
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         
         for (Produto p : produtos) {
             Object[] row = {
@@ -166,8 +165,6 @@ public class ProdutoForm extends JFrame {
                 p.getNm_produto(),
                 String.format("R$ %.2f", p.getVl_produto()),
                 p.getSt_produto().equals("A") ? "Ativo" : "Inativo",
-                p.getDt_validade() != null ? sdf.format(p.getDt_validade()) : "N/A",
-                p.getDt_fabricacao() != null ? sdf.format(p.getDt_fabricacao()) : "N/A"
             };
             tableModel.addRow(row);
         }
@@ -196,47 +193,32 @@ public class ProdutoForm extends JFrame {
         
         // Código
         gbc.gridx = 0; gbc.gridy = 0;
-        panel.add(new JLabel("Código:*"), gbc);
+        panel.add(new JLabel("Código:"), gbc);
         gbc.gridx = 1;
         JTextField txtCodigo = new JTextField(15);
         panel.add(txtCodigo, gbc);
         
         // Nome
         gbc.gridx = 0; gbc.gridy = 1;
-        panel.add(new JLabel("Nome:*"), gbc);
+        panel.add(new JLabel("Nome:"), gbc);
         gbc.gridx = 1;
         JTextField txtNome = new JTextField(20);
         panel.add(txtNome, gbc);
         
         // Preço
         gbc.gridx = 0; gbc.gridy = 2;
-        panel.add(new JLabel("Preço:*"), gbc);
+        panel.add(new JLabel("Preço:"), gbc);
         gbc.gridx = 1;
         JTextField txtPreco = new JTextField(10);
         panel.add(txtPreco, gbc);
         
         // Status
         gbc.gridx = 0; gbc.gridy = 3;
-        panel.add(new JLabel("Status:*"), gbc);
+        panel.add(new JLabel("Status:"), gbc);
         gbc.gridx = 1;
         JComboBox<String> cmbStatus = new JComboBox<>(new String[]{"A - Ativo", "I - Inativo"});
         panel.add(cmbStatus, gbc);
         
-        // Validade
-        gbc.gridx = 0; gbc.gridy = 4;
-        panel.add(new JLabel("Validade:"), gbc);
-        gbc.gridx = 1;
-        JTextField txtValidade = new JTextField(10);
-        txtValidade.setText("YYYY-MM-DD");
-        panel.add(txtValidade, gbc);
-        
-        // Fabricação
-        gbc.gridx = 0; gbc.gridy = 5;
-        panel.add(new JLabel("Fabricação:"), gbc);
-        gbc.gridx = 1;
-        JTextField txtFabricacao = new JTextField(10);
-        txtFabricacao.setText("YYYY-MM-DD");
-        panel.add(txtFabricacao, gbc);
         
         // Botões
         JPanel panelBotoes = new JPanel();
@@ -250,18 +232,6 @@ public class ProdutoForm extends JFrame {
                 Double preco = Double.parseDouble(txtPreco.getText());
                 String status = ((String) cmbStatus.getSelectedItem()).substring(0, 1);
                 
-                Date validade = null;
-                Date fabricacao = null;
-                
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                
-                if (!txtValidade.getText().equals("YYYY-MM-DD")) {
-                    validade = sdf.parse(txtValidade.getText());
-                }
-                
-                if (!txtFabricacao.getText().equals("YYYY-MM-DD")) {
-                    fabricacao = sdf.parse(txtFabricacao.getText());
-                }
                 
                 boolean sucesso = produtoController.cadastrarProduto(codigo, nome, preco, status);
                 
@@ -388,8 +358,7 @@ public class ProdutoForm extends JFrame {
         } else {
             produtos = produtoController.listarProdutosInativos();
         }
-        
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+    
         
         for (Produto p : produtos) {
             Object[] row = {
@@ -398,8 +367,6 @@ public class ProdutoForm extends JFrame {
                 p.getNm_produto(),
                 String.format("R$ %.2f", p.getVl_produto()),
                 p.getSt_produto().equals("A") ? "Ativo" : "Inativo",
-                p.getDt_validade() != null ? sdf.format(p.getDt_validade()) : "N/A",
-                p.getDt_fabricacao() != null ? sdf.format(p.getDt_fabricacao()) : "N/A"
             };
             tableModel.addRow(row);
         }
@@ -408,16 +375,13 @@ public class ProdutoForm extends JFrame {
     }
     
     private void adicionarProdutoNaTabela(Produto produto) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        
+
         Object[] row = {
             produto.getId_produto(),
             produto.getCd_produto(),
             produto.getNm_produto(),
             String.format("R$ %.2f", produto.getVl_produto()),
             produto.getSt_produto().equals("A") ? "Ativo" : "Inativo",
-            produto.getDt_validade() != null ? sdf.format(produto.getDt_validade()) : "N/A",
-            produto.getDt_fabricacao() != null ? sdf.format(produto.getDt_fabricacao()) : "N/A"
         };
         tableModel.addRow(row);
     }

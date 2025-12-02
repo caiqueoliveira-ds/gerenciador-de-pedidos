@@ -3,7 +3,6 @@ package com.tecdes.gerenciador.controller;
 import com.tecdes.gerenciador.model.entity.Produto;
 import com.tecdes.gerenciador.service.ProdutoService;
 
-import java.util.Date;
 import java.util.List;
 
 public class ProdutoController {
@@ -13,8 +12,6 @@ public class ProdutoController {
     public ProdutoController() {
         this.produtoService = new ProdutoService();
     }
-    
-    // Métodos CRUD para a view
     
     public boolean cadastrarProduto(Integer codigo, String nome, Double preco, String status) {
         try {
@@ -26,10 +23,9 @@ public class ProdutoController {
         }
     }
     
-    public boolean atualizarProduto(Integer id, Integer codigo, String nome, String status, 
-                                   Double preco, Date validade, Date fabricacao) {
+    public boolean atualizarProduto(Integer id, Integer codigo, String nome, String status, Double preco) {
         try {
-            produtoService.atualizarProduto(id, codigo, nome, status, preco, validade, fabricacao);
+            produtoService.atualizarProduto(id, codigo, nome, status, preco);
             return true;
         } catch (Exception e) {
             System.err.println("Erro ao atualizar: " + e.getMessage());

@@ -11,7 +11,8 @@ public class ProdutoRepository implements IProdutoRepository {
     
     @Override
     public Produto save(Produto produto) {
-        String sql = "INSERT INTO T_GRP_PRODUTO (cd_produto, nm_produto, st_produto, vl_produto, dt_validade, dt_fabricacao) VALUES (?, ?, ?, ?, ?, ?)";
+        // CORRIJA AQUI: Remova dt_validade e dt_fabricacao
+        String sql = "INSERT INTO T_GRP_PRODUTO (cd_produto, nm_produto, st_produto, vl_produto) VALUES (?, ?, ?, ?)";
         
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -25,18 +26,7 @@ public class ProdutoRepository implements IProdutoRepository {
             stmt.setString(2, produto.getNm_produto());
             stmt.setString(3, produto.getSt_produto());
             stmt.setDouble(4, produto.getVl_produto());
-            
-            if (produto.getDt_validade() != null) {
-                stmt.setDate(5, new java.sql.Date(produto.getDt_validade().getTime()));
-            } else {
-                stmt.setDate(5, null);
-            }
-            
-            if (produto.getDt_fabricacao() != null) {
-                stmt.setDate(6, new java.sql.Date(produto.getDt_fabricacao().getTime()));
-            } else {
-                stmt.setDate(6, null);
-            }
+            // REMOVA AS LINHAS COM dt_validade e dt_fabricacao
             
             int affectedRows = stmt.executeUpdate();
             
@@ -53,6 +43,35 @@ public class ProdutoRepository implements IProdutoRepository {
             throw new RuntimeException("Erro ao salvar produto: " + e.getMessage(), e);
         } finally {
             closeResources(rs, stmt);
+        }
+    }
+    
+    @Override
+    public Produto update(Produto produto) {
+        // CORRIJA AQUI TAMBÉM: Remova dt_validade e dt_fabricacao
+        String sql = "UPDATE T_GRP_PRODUTO SET cd_produto = ?, nm_produto = ?, st_produto = ?, vl_produto = ? WHERE id_produto = ?";
+        
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        
+        try {
+            conn = ConnectionFactory.getInstance().getConnection();
+            stmt = conn.prepareStatement(sql);
+            
+            stmt.setInt(1, produto.getCd_produto());
+            stmt.setString(2, produto.getNm_produto());
+            stmt.setString(3, produto.getSt_produto());
+            stmt.setDouble(4, produto.getVl_produto());
+            stmt.setInt(5, produto.getId_produto());
+            // REMOVA AS LINHAS COM dt_validade e dt_fabricacao
+            
+            stmt.executeUpdate();
+            return produto;
+            
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao atualizar produto: " + e.getMessage(), e);
+        } finally {
+            closeResources(null, stmt);
         }
     }
     
@@ -194,46 +213,6 @@ public class ProdutoRepository implements IProdutoRepository {
     }
     
     @Override
-    public Produto update(Produto produto) {
-        String sql = "UPDATE T_GRP_PRODUTO SET cd_produto = ?, nm_produto = ?, st_produto = ?, vl_produto = ?, dt_validade = ?, dt_fabricacao = ? WHERE id_produto = ?";
-        
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        
-        try {
-            conn = ConnectionFactory.getInstance().getConnection();
-            stmt = conn.prepareStatement(sql);
-            
-            stmt.setInt(1, produto.getCd_produto());
-            stmt.setString(2, produto.getNm_produto());
-            stmt.setString(3, produto.getSt_produto());
-            stmt.setDouble(4, produto.getVl_produto());
-            
-            if (produto.getDt_validade() != null) {
-                stmt.setDate(5, new java.sql.Date(produto.getDt_validade().getTime()));
-            } else {
-                stmt.setDate(5, null);
-            }
-            
-            if (produto.getDt_fabricacao() != null) {
-                stmt.setDate(6, new java.sql.Date(produto.getDt_fabricacao().getTime()));
-            } else {
-                stmt.setDate(6, null);
-            }
-            
-            stmt.setInt(7, produto.getId_produto());
-            
-            stmt.executeUpdate();
-            return produto;
-            
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao atualizar produto: " + e.getMessage(), e);
-        } finally {
-            closeResources(null, stmt);
-        }
-    }
-    
-    @Override
     public boolean delete(Integer id) {
         String sql = "DELETE FROM T_GRP_PRODUTO WHERE id_produto = ?";
         
@@ -305,8 +284,9 @@ public class ProdutoRepository implements IProdutoRepository {
         produto.setNm_produto(rs.getString("nm_produto"));
         produto.setSt_produto(rs.getString("st_produto"));
         produto.setVl_produto(rs.getDouble("vl_produto"));
-        produto.setDt_validade(rs.getDate("dt_validade"));
-        produto.setDt_fabricacao(rs.getDate("dt_fabricacao"));
+        // REMOVA AS LINHAS ABAIXO:
+        // produto.setDt_validade(rs.getDate("dt_validade"));
+        // produto.setDt_fabricacao(rs.getDate("dt_fabricacao"));
         return produto;
     }
     
