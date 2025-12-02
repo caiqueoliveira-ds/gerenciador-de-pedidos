@@ -6,7 +6,7 @@ CREATE TABLE T_GRP_CLIENTE(
     id_cliente INT PRIMARY KEY AUTO_INCREMENT,
     nm_cliente VARCHAR(150) NOT NULL,
     nr_cpf CHAR(14) NOT NULL UNIQUE,
-    ds_email VARCHAR(150) NOT NULL UNIQUE,
+    ds_email VARCHAR(150) NOT NULL UNIQUE
 );
 
 CREATE TABLE T_GRP_PEDIDO(
@@ -35,7 +35,7 @@ CREATE TABLE T_GRP_ESTOQUE(
     id_estoque INT PRIMARY KEY AUTO_INCREMENT,
     tp_mov_estoque VARCHAR(20) NOT NULL,
     st_estoque VARCHAR(20) NOT NULL,
-    qt_produto INT NOT NULL,
+    qt_produto INT NOT NULL
 
 );
 
@@ -83,7 +83,7 @@ CREATE TABLE T_GRP_ENDERECO(
     nr_residencia INT NOT NULL,   
     ob_complementar VARCHAR(150)
 
-)
+);
 
 CREATE TABLE T_CLIENTE_ENDERECO( /*ASSOCIATIVA*/
 
@@ -100,5 +100,5 @@ CREATE TABLE T_GRP_PAGAMENTO(
     id_pagamento INT NOT NULL,
     tp_pagamento CHAR(1) NOT NULL,
     dt_pagamento DATETIME NOT NULL,
-    vl_pagamento DECIMAL(5,2) NOT NULL,
+    vl_pagamento DECIMAL(5,2) NOT NULL
 );

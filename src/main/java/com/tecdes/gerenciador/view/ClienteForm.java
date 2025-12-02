@@ -1,13 +1,18 @@
 package com.tecdes.gerenciador.view;
 
+import com.tecdes.gerenciador.model.entity.Cliente;
+import com.tecdes.gerenciador.repository.ClienteRepository;
+import com.tecdes.gerenciador.service.ClienteService;
+
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionListener;
+import java.util.List;
 
 public class ClienteForm extends JFrame {
+
     private JTable tabelaClientes;
     private JButton btnAddCliente;
     private JButton btnEditarCliente;
@@ -15,17 +20,15 @@ public class ClienteForm extends JFrame {
     private JButton btnBuscar;
     private JTextField txtBusca;
     private JLabel lblStatus;
-    
-    // Cores modernas
-    private final Color COR_PRIMARIA = new Color(41, 128, 185);    // Azul profissional
-    private final Color COR_SECUNDARIA = new Color(52, 152, 219);  // Azul mais claro
-    private final Color COR_TEXTO = new Color(44, 62, 80);         // Cinza escuro
-    private final Color COR_BORDA = new Color(236, 240, 241);      // Cinza claro
+
+    private final ClienteService clienteService =
+            new ClienteService(new ClienteRepository());
 
     public ClienteForm() {
         initComponents();
         layoutComponents();
         aplicarEstilos();
+        carregarClientes();
     }
 
     private void initComponents() {
@@ -33,183 +36,127 @@ public class ClienteForm extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(1000, 700);
         setLocationRelativeTo(null);
-        setResizable(true);
 
-        // Componentes
         btnAddCliente = new JButton("Cadastrar Cliente");
         btnEditarCliente = new JButton("Editar");
         btnRemoverCliente = new JButton("Remover");
         btnBuscar = new JButton("Buscar");
-        txtBusca = new JTextField(15);
-        
-        // Label de status
-        lblStatus = new JLabel("Total de clientes: 0");
-        lblStatus.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        // Configurar tabela
+        txtBusca = new JTextField(15);
+        lblStatus = new JLabel("Total de clientes: 0");
+
         tabelaClientes = new JTable();
         tabelaClientes.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        // EVENTO DO BOTÃO CADASTRAR
+        btnAddCliente.addActionListener(e -> abrirPopupCadastro());
     }
 
     private void layoutComponents() {
-        // Usar BorderLayout para organização mais limpa
+
         setLayout(new BorderLayout(10, 10));
-        
-        // Adicionar margens ao conteúdo principal
         JPanel panelPrincipal = new JPanel(new BorderLayout(10, 10));
         panelPrincipal.setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        // === CABEÇALHO ===
-        JPanel panelCabecalho = criarPanelCabecalho();
-        
-        // === BARRA DE FERRAMENTAS ===
-        JPanel panelFerramentas = criarPanelFerramentas();
-        
-        // === TABELA ===
-        JPanel panelTabela = criarPanelTabela();
-        
-        // === STATUS BAR ===
-        JPanel panelStatus = criarPanelStatus();
+        // Cabeçalho
+        JPanel panelCab = new JPanel(new BorderLayout());
+        JLabel titulo = new JLabel("Controle de Clientes");
+        titulo.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        panelCab.add(titulo, BorderLayout.WEST);
+        panelCab.add(btnAddCliente, BorderLayout.EAST);
 
-        // Montar layout principal CORRIGIDO
-        panelPrincipal.add(panelCabecalho, BorderLayout.NORTH);
-        panelPrincipal.add(panelFerramentas, BorderLayout.CENTER); // Mudado para CENTER
-        panelPrincipal.add(panelTabela, BorderLayout.SOUTH); // Mudado para SOUTH
-        
+        // Ferramentas
+        JPanel ferramentas = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        ferramentas.setBorder(BorderFactory.createTitledBorder("Ferramentas"));
+        ferramentas.add(new JLabel("Buscar:"));
+        ferramentas.add(txtBusca);
+        ferramentas.add(btnBuscar);
+        ferramentas.add(btnEditarCliente);
+        ferramentas.add(btnRemoverCliente);
+
+        // Tabela
+        JPanel painelTabela = new JPanel(new BorderLayout());
+        painelTabela.setBorder(BorderFactory.createTitledBorder("Lista de Clientes"));
+        JScrollPane scroll = new JScrollPane(tabelaClientes);
+        painelTabela.add(scroll, BorderLayout.CENTER);
+
+        // Status
+        JPanel panelStatus = new JPanel(new BorderLayout());
+        panelStatus.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY));
+        panelStatus.add(lblStatus, BorderLayout.EAST);
+
+        // Montagem
+        panelPrincipal.add(panelCab, BorderLayout.NORTH);
+        panelPrincipal.add(ferramentas, BorderLayout.CENTER);
+        panelPrincipal.add(painelTabela, BorderLayout.SOUTH);
+
         add(panelPrincipal, BorderLayout.CENTER);
-        add(panelStatus, BorderLayout.SOUTH); // Status bar separada
-    }
-
-    private JPanel criarPanelCabecalho() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(new EmptyBorder(0, 0, 15, 0));
-
-        // Título
-        JLabel lblTitulo = new JLabel("Controle de Clientes");
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        lblTitulo.setForeground(COR_TEXTO);
-
-        // Botão de cadastro
-        JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        panelBotoes.add(btnAddCliente);
-
-        panel.add(lblTitulo, BorderLayout.WEST);
-        panel.add(panelBotoes, BorderLayout.EAST);
-
-        return panel;
-    }
-
-    private JPanel criarPanelFerramentas() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(COR_BORDA),
-            "Ferramentas",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            new Font("Segoe UI", Font.BOLD, 12),
-            COR_TEXTO
-        ));
-
-        // Adicionar componentes na ordem correta
-        panel.add(new JLabel("Buscar:"));
-        panel.add(txtBusca);
-        panel.add(btnBuscar);
-        panel.add(Box.createHorizontalStrut(20)); // Espaçamento
-        panel.add(btnEditarCliente);
-        panel.add(btnRemoverCliente);
-
-        return panel;
-    }
-
-    private JPanel criarPanelTabela() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(COR_BORDA),
-            "Lista de Clientes",
-            TitledBorder.LEFT,
-            TitledBorder.TOP,
-            new Font("Segoe UI", Font.BOLD, 12),
-            COR_TEXTO
-        ));
-
-        // Personalizar a tabela
-        tabelaClientes.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        tabelaClientes.setRowHeight(30);
-        tabelaClientes.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 14));
-        tabelaClientes.getTableHeader().setBackground(COR_PRIMARIA);
-        tabelaClientes.getTableHeader().setForeground(Color.WHITE);
-        tabelaClientes.setGridColor(COR_BORDA);
-        tabelaClientes.setShowGrid(true);
-
-        JScrollPane scrollPane = new JScrollPane(tabelaClientes);
-        scrollPane.setPreferredSize(new Dimension(800, 400));
-        
-        panel.add(scrollPane, BorderLayout.CENTER);
-        return panel;
-    }
-
-    private JPanel criarPanelStatus() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, COR_BORDA));
-        panel.setBackground(new Color(250, 250, 250));
-        panel.setPreferredSize(new Dimension(getWidth(), 25));
-        
-        JLabel lblInfo = new JLabel("Sistema de Cadastro v1.0");
-        lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblInfo.setForeground(Color.GRAY);
-        
-        panel.add(lblInfo, BorderLayout.WEST);
-        panel.add(lblStatus, BorderLayout.EAST);
-        
-        return panel;
+        add(panelStatus, BorderLayout.SOUTH);
     }
 
     private void aplicarEstilos() {
-        // Estilo para botões primários (Cadastrar)
-        btnAddCliente.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnAddCliente.setBackground(COR_PRIMARIA);
+        btnAddCliente.setBackground(new Color(41, 128, 185));
         btnAddCliente.setForeground(Color.WHITE);
-        btnAddCliente.setFocusPainted(false);
-        btnAddCliente.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(COR_PRIMARIA.darker()),
-            BorderFactory.createEmptyBorder(8, 15, 8, 15)
-        ));
-
-        // Estilo para botões secundários
-        estiloBotaoSecundario(btnEditarCliente);
-        estiloBotaoSecundario(btnRemoverCliente);
-        estiloBotaoSecundario(btnBuscar);
-
-        // Estilo para campo de busca
-        txtBusca.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        txtBusca.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(COR_BORDA),
-            BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
-
-        // Estilo para label de status
-        lblStatus.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        lblStatus.setForeground(COR_TEXTO);
+        btnAddCliente.setFont(new Font("Segoe UI", Font.BOLD, 14));
     }
 
-    private void estiloBotaoSecundario(JButton botao) {
-        botao.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        botao.setBackground(Color.WHITE);
-        botao.setForeground(COR_TEXTO);
-        botao.setFocusPainted(false);
-        botao.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(COR_BORDA),
-            BorderFactory.createEmptyBorder(6, 12, 6, 12)
-        ));
-        
-        // Efeito hover básico
-        botao.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                botao.setBackground(new Color(245, 245, 245));
+    private void abrirPopupCadastro() {
+        JTextField txtNome = new JTextField();
+        JTextField txtCpf = new JTextField();
+        JTextField txtEmail = new JTextField();
+
+        Object[] campos = {
+                "Nome:", txtNome,
+                "CPF (somente números):", txtCpf,
+                "Email:", txtEmail
+        };
+
+        int opcao = JOptionPane.showConfirmDialog(
+                this,
+                campos,
+                "Cadastrar Novo Cliente",
+                JOptionPane.OK_CANCEL_OPTION
+        );
+
+        if (opcao == JOptionPane.OK_OPTION) {
+            try {
+                Cliente novo = clienteService.cadastrarCliente(
+                        txtNome.getText(),
+                        txtCpf.getText(),
+                        txtEmail.getText()
+                );
+
+                JOptionPane.showMessageDialog(this,
+                        "Cliente cadastrado com sucesso!\nID: " + novo.getId_cliente());
+
+                carregarClientes();
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Erro: " + ex.getMessage(),
+                        "Erro",
+                        JOptionPane.ERROR_MESSAGE);
             }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                botao.setBackground(Color.WHITE);
-            }
-        });
+        }
+    }
+
+    private void carregarClientes() {
+        List<Cliente> lista = clienteService.buscarTodos();
+
+        String[] colunas = {"ID", "Nome", "CPF", "Email"};
+
+        DefaultTableModel modelo = new DefaultTableModel(colunas, 0);
+
+        for (Cliente c : lista) {
+            modelo.addRow(new Object[]{
+                    c.getId_cliente(),
+                    c.getNm_cliente(),
+                    c.getNr_cpf(),
+                    c.getDs_email()
+            });
+        }
+
+        tabelaClientes.setModel(modelo);
+        lblStatus.setText("Total de clientes: " + lista.size());
     }
 }
