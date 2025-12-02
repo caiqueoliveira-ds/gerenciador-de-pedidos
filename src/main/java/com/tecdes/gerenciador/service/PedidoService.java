@@ -14,7 +14,7 @@ public class PedidoService {
     private IPedidoRepository pedidoRepository = null;
     
     public PedidoService() {
-        this.pedidoRepository = pedidoRepository;
+        // this.pedidoRepository = pedidoRepository;
     }
     
     // ========== OPERAÇÕES BÁSICAS DE PEDIDO ==========
