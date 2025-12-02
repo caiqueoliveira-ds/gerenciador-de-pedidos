@@ -10,7 +10,6 @@ public class ProdutoForm extends JFrame {
 
     private JTable tabelaProdutos;
     private JButton btnAddProduto;
-    private JButton btnAddCombo;
     private JButton btnEditarProduto;
     private JButton btnRemoverProduto;
     private JButton btnBuscar;
@@ -20,11 +19,9 @@ public class ProdutoForm extends JFrame {
     private JComboBox<String> cmbStatus;
     private JLabel lblTotalProdutos;
     private JLabel lblProdutosAtivos;
-    private JLabel lblEstoqueBaixo;
-    private JLabel lblMaisVendido;
 
     // Cores para lanchonete
-    private final Color COR_PRIMARIA = new Color(230, 126, 34);    // Laranja - cor de lanchonete
+    private final Color COR_PRIMARIA = new Color(41, 128, 185);    // Laranja - cor de lanchonete
     private final Color COR_SECUNDARIA = new Color(243, 156, 18);  // Laranja claro
     private final Color COR_VERMELHO = new Color(231, 76, 60);     // Vermelho para carnes/combos
     private final Color COR_VERDE = new Color(46, 204, 113);       // Verde para saladas/vegetarianos
@@ -46,17 +43,16 @@ public class ProdutoForm extends JFrame {
         setResizable(true);
 
         // Componentes
-        btnAddProduto = new JButton("🍔 Novo Item");
-        btnAddCombo = new JButton("🥤 Novo Combo");
-        btnEditarProduto = new JButton("✏️ Editar");
-        btnRemoverProduto = new JButton("🗑️ Remover");
-        btnAtivarDesativar = new JButton("⚡ Ativar/Desativar");
-        btnBuscar = new JButton("🔍 Buscar");
+        btnAddProduto = new JButton("Novo Item");
+        btnEditarProduto = new JButton("Editar");
+        btnRemoverProduto = new JButton("Remover");
+        btnAtivarDesativar = new JButton("Ativar/Desativar");
+        btnBuscar = new JButton("Buscar");
         txtBusca = new JTextField(15);
         
         // Filtros para lanchonete
         cmbCategoria = new JComboBox<>(new String[]{
-            "Todos", "Lanches", "Bebidas", "Combos", "Acompanhamentos", 
+            "Todos", "Lanches", "Bebidas", "Acompanhamentos", 
             "Sobremesas", "Promoções", "Vegetariano"
         });
         
@@ -67,8 +63,6 @@ public class ProdutoForm extends JFrame {
         // Labels de estatísticas
         lblTotalProdutos = new JLabel("Itens: 0");
         lblProdutosAtivos = new JLabel("Ativos: 0");
-        lblEstoqueBaixo = new JLabel("Falta: 0");
-        lblMaisVendido = new JLabel("🏆: -");
 
         // Configurar tabela
         tabelaProdutos = new JTable();
@@ -111,14 +105,13 @@ public class ProdutoForm extends JFrame {
         panel.setBorder(new EmptyBorder(0, 0, 15, 0));
 
         // Título com ícone de lanchonete
-        JLabel lblTitulo = new JLabel("🍕 Cardápio da Lanchonete");
+        JLabel lblTitulo = new JLabel("Cardápio da Lanchonete");
         lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblTitulo.setForeground(COR_TEXTO);
 
         // Botões de ação
         JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         panelBotoes.add(btnAddProduto);
-        panelBotoes.add(btnAddCombo);
 
         panel.add(lblTitulo, BorderLayout.WEST);
         panel.add(panelBotoes, BorderLayout.EAST);
@@ -137,14 +130,14 @@ public class ProdutoForm extends JFrame {
             COR_TEXTO
         ));
 
-        panel.add(new JLabel("🔍 Buscar:"));
+        panel.add(new JLabel("Buscar:"));
         panel.add(txtBusca);
         panel.add(btnBuscar);
         panel.add(Box.createHorizontalStrut(15));
-        panel.add(new JLabel("📂 Categoria:"));
+        panel.add(new JLabel("Categoria:"));
         panel.add(cmbCategoria);
         panel.add(Box.createHorizontalStrut(15));
-        panel.add(new JLabel("📊 Status:"));
+        panel.add(new JLabel("Status:"));
         panel.add(cmbStatus);
         panel.add(Box.createHorizontalStrut(15));
         panel.add(btnEditarProduto);
@@ -158,7 +151,7 @@ public class ProdutoForm extends JFrame {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
         panel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(COR_BORDA),
-            "📈 Resumo do Cardápio",
+            "Resumo do Cardápio",
             TitledBorder.LEFT,
             TitledBorder.TOP,
             new Font("Segoe UI", Font.BOLD, 12),
@@ -168,13 +161,9 @@ public class ProdutoForm extends JFrame {
         // Estilizar labels de estatísticas
         estiloLabelEstatistica(lblTotalProdutos, COR_TEXTO, "Total de itens no cardápio");
         estiloLabelEstatistica(lblProdutosAtivos, COR_VERDE, "Itens disponíveis para venda");
-        estiloLabelEstatistica(lblEstoqueBaixo, COR_VERMELHO, "Itens com estoque baixo");
-        estiloLabelEstatistica(lblMaisVendido, COR_PRIMARIA, "Item mais vendido hoje");
 
         panel.add(lblTotalProdutos);
         panel.add(lblProdutosAtivos);
-        panel.add(lblEstoqueBaixo);
-        panel.add(lblMaisVendido);
 
         return panel;
     }
@@ -183,7 +172,7 @@ public class ProdutoForm extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createLineBorder(COR_BORDA),
-            "📋 Lista de Itens do Cardápio",
+            "Lista de Itens do Cardápio",
             TitledBorder.LEFT,
             TitledBorder.TOP,
             new Font("Segoe UI", Font.BOLD, 12),
@@ -209,9 +198,9 @@ public class ProdutoForm extends JFrame {
     private JPanel criarPanelStatus() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, COR_BORDA));
-        panel.setBackground(new Color(250, 250, 250));
+        panel.setBackground(new Color(41, 128, 185));
         
-        JLabel lblInfo = new JLabel("💡 Dica: Use Ativar/Desativar para itens temporariamente indisponíveis");
+        JLabel lblInfo = new JLabel("Dica: Use Ativar/Desativar para itens temporariamente indisponíveis");
         lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         lblInfo.setForeground(Color.GRAY);
         
@@ -233,16 +222,6 @@ public class ProdutoForm extends JFrame {
         btnAddProduto.setFocusPainted(false);
         btnAddProduto.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(COR_PRIMARIA.darker()),
-            BorderFactory.createEmptyBorder(8, 15, 8, 15)
-        ));
-
-        // Estilo para botão Novo Combo
-        btnAddCombo.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnAddCombo.setBackground(COR_VERMELHO);
-        btnAddCombo.setForeground(Color.WHITE);
-        btnAddCombo.setFocusPainted(false);
-        btnAddCombo.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(COR_VERMELHO.darker()),
             BorderFactory.createEmptyBorder(8, 15, 8, 15)
         ));
 
@@ -308,30 +287,14 @@ public class ProdutoForm extends JFrame {
     private void carregarDadosExemplo() {
         // Dados de exemplo para lanchonete
         String[] colunas = {"Código", "Item", "Categoria", "Preço", "Estoque", "Status", "Vendas"};
-        Object[][] dados = {
-            {1, "🍔 X-Burger", "Lanches", "R$ 18,90", 25, "✅ Ativo", "45"},
-            {2, "🍟 Batata Frita", "Acompanhamentos", "R$ 12,50", 18, "✅ Ativo", "38"},
-            {3, "🥤 Coca-Cola 500ml", "Bebidas", "R$ 8,90", 30, "✅ Ativo", "52"},
-            {4, "🍕 Pizza Média", "Lanches", "R$ 35,90", 8, "✅ Ativo", "22"},
-            {5, "🥗 Salada Caesar", "Vegetariano", "R$ 22,90", 5, "⚠️ Baixo", "15"},
-            {6, "🍦 Sorvete", "Sobremesas", "R$ 9,90", 12, "✅ Ativo", "28"},
-            {7, "🎯 Combo Família", "Combos", "R$ 65,90", 15, "✅ Ativo", "18"},
-            {8, "🌯 Wrap Frango", "Lanches", "R$ 16,90", 0, "❌ Sem Estoque", "31"}
-        };
+        Object[][] dados = {};
         
         tabelaProdutos.setModel(new javax.swing.table.DefaultTableModel(dados, colunas));
-        atualizarEstatisticas(8, 7, 2, "X-Burger");
+        atualizarEstatisticas(0, 0);
     }
 
-    public void atualizarEstatisticas(int totalItens, int itensAtivos, int estoqueBaixo, String maisVendido) {
-        lblTotalProdutos.setText("📦 Itens: " + totalItens);
-        lblProdutosAtivos.setText("✅ Ativos: " + itensAtivos);
-        lblEstoqueBaixo.setText("⚠️ Falta: " + estoqueBaixo);
-        lblMaisVendido.setText("🏆 " + maisVendido);
-        
-        // Destacar estoque baixo
-        if (estoqueBaixo > 0) {
-            lblEstoqueBaixo.setForeground(COR_VERMELHO);
-        }
+    public void atualizarEstatisticas(int totalItens, int itensAtivos) {
+        lblTotalProdutos.setText("Itens: " + totalItens);
+        lblProdutosAtivos.setText("Ativos: " + itensAtivos);
     }
 }

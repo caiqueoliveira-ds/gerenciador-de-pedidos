@@ -158,8 +158,8 @@ public class MainView extends JFrame {
     private void aplicarEstilos() {
         // Estilo para botões de menu
         estiloBotaoMenu(btnCliente, COR_PRIMARIA);
-        estiloBotaoMenu(btnProduto, new Color(39, 174, 96));   // Verde
-        estiloBotaoMenu(btnPedido, new Color(142, 68, 173));   // Roxo
+        estiloBotaoMenu(btnProduto, COR_PRIMARIA);
+        estiloBotaoMenu(btnPedido, COR_PRIMARIA);
         
         // Estilo para botão sair
         btnSair.setFont(new Font("Segoe UI", Font.PLAIN, 12));
