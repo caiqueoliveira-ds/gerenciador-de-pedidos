@@ -1,6 +1,6 @@
 # gerenciador-de-pedidos
 
-Sistema de Gestão de Pedidos - Lanchonete
+Sistema de Gestão de Pedidos - Lanchonete - SA
 Visão Geral
 
 Sistema desktop desenvolvido em Java Swing para gestão completa de pedidos de uma lanchonete, aplicando boas práticas de programação, padrões de projeto e arquitetura MVC.
