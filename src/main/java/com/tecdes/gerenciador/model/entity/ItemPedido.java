@@ -1,64 +1,58 @@
 package com.tecdes.gerenciador.model.entity;
 
 public class ItemPedido {
-    private Produto produto;
-    private Integer quantidade;
+    private Integer id_item_pedido;
+    private Integer id_pedido;
+    private Integer id_produto;
+    private Integer qtd_item;
+    private String ds_observacao;
     private Double subtotal;
     
-    // Construtor padrão
+    // Produto (para facilitar)
+    private Produto produto;
+    
     public ItemPedido() {}
     
-    // Construtor com parâmetros
-    public ItemPedido(Produto produto, Integer quantidade) {
-        this.produto = produto;
-        this.quantidade = quantidade;
-        calcularSubtotal();
+    public ItemPedido(Integer id_pedido, Integer id_produto, Integer quantidade) {
+        this.id_pedido = id_pedido;
+        this.id_produto = id_produto;
+        this.qtd_item = quantidade;
+        this.ds_observacao = "";
     }
     
     // Getters e Setters
-    public Produto getProduto() {
-        return produto;
-    }
+    public Integer getId_item_pedido() { return id_item_pedido; }
+    public void setId_item_pedido(Integer id_item_pedido) { this.id_item_pedido = id_item_pedido; }
     
-    public void setProduto(Produto produto) {
-        this.produto = produto;
-        calcularSubtotal();
-    }
+    public Integer getId_pedido() { return id_pedido; }
+    public void setId_pedido(Integer id_pedido) { this.id_pedido = id_pedido; }
     
-    public Integer getQuantidade() {
-        return quantidade;
-    }
+    public Integer getId_produto() { return id_produto; }
+    public void setId_produto(Integer id_produto) { this.id_produto = id_produto; }
     
-    public void setQuantidade(Integer quantidade) {
-        this.quantidade = quantidade;
-        calcularSubtotal();
-    }
+    public Integer getQtd_item() { return qtd_item; }
+    public void setQtd_item(Integer qtd_item) { this.qtd_item = qtd_item; }
     
-    public Double getSubtotal() {
-        return subtotal;
-    }
+    public String getDs_observacao() { return ds_observacao; }
+    public void setDs_observacao(String ds_observacao) { this.ds_observacao = ds_observacao; }
     
-    public void setSubtotal(Double subtotal) {
-        this.subtotal = subtotal;
-    }
+    public Double getSubtotal() { return subtotal; }
+    public void setSubtotal(Double subtotal) { this.subtotal = subtotal; }
     
-    // Métodos de negócio
+    public Produto getProduto() { return produto; }
+    public void setProduto(Produto produto) { this.produto = produto; }
+    
     public Double calcularSubtotal() {
-        if (produto != null && produto.getVl_produto() != null && quantidade != null) {
-            this.subtotal = produto.getVl_produto() * quantidade;
+        if (produto != null && produto.getVl_produto() != null && qtd_item != null) {
+            this.subtotal = produto.getVl_produto() * qtd_item;
         } else {
             this.subtotal = 0.0;
         }
         return this.subtotal;
     }
     
-    public Double calcularTotal() {
-        return calcularSubtotal();
-    }
-    
     @Override
     public String toString() {
-        return "ItemPedido [produto=" + (produto != null ? produto.getNm_produto() : "null") 
-                + ", quantidade=" + quantidade + ", subtotal=" + subtotal + "]";
+        return qtd_item + "x " + (produto != null ? produto.getNm_produto() : "Produto " + id_produto);
     }
 }

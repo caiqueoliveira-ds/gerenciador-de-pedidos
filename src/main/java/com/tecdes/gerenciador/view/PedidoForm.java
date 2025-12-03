@@ -3,282 +3,149 @@ package com.tecdes.gerenciador.view;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
-
 import java.awt.*;
+import java.awt.event.*;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import com.tecdes.gerenciador.controller.PedidoController;
+import com.tecdes.gerenciador.model.entity.Pedido;
+import com.tecdes.gerenciador.util.RelatorioUtil;
 
 public class PedidoForm extends JFrame {
     private JButton btnAddPedido;
     private JTable tabelaPedidos;
-    private JScrollPane scrollPane;
-    private JPanel panelTop;
-    private JPanel panelCenter;
-    private JPanel panelBottom;
-    private JTextField campoBusca;
-    private JButton btnBuscar;
-    private JButton btnLimpar;
-    private JButton btnEditar;
-    private JButton btnExcluir;
+    private JButton btnRelatorio;
+    private PedidoController pedidoController;
+    private DefaultTableModel tableModel;
 
     public PedidoForm() {
+        this.pedidoController = new PedidoController();
         initComponents();
+        carregarDados();
     }
 
     private void initComponents() {
-        setTitle("Gerenciador de Pedidos");
+        setTitle("Pedidos");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(1000, 650);
+        setSize(900, 600);
         setLocationRelativeTo(null);
-        setResizable(true);
 
-        // Usar BorderLayout como layout principal
         setLayout(new BorderLayout(10, 10));
         
-        // Painel superior com título e botão
-        panelTop = new JPanel(new BorderLayout(10, 0));
-        panelTop.setBorder(new EmptyBorder(15, 20, 15, 20));
-        panelTop.setBackground(new Color(248, 249, 250));
-
-        // Título com estilo
-        JLabel lblTitulo = new JLabel("Gerenciador de Pedidos");
-        lblTitulo.setFont(new Font("Arial", Font.BOLD, 24));
-        lblTitulo.setForeground(new Color(33, 37, 41));
+        // Painel superior
+        JPanel panelTop = new JPanel(new BorderLayout(10, 0));
+        panelTop.setBorder(new EmptyBorder(10, 10, 10, 10));
         
-        // Botão Novo Pedido com estilo local
-        btnAddPedido = new JButton("+ Novo Pedido");
-        estilizarBotao(btnAddPedido, new Color(41, 128, 185), Color.WHITE);
-
+        JLabel lblTitulo = new JLabel("Pedidos");
+        lblTitulo.setFont(new Font("Arial", Font.BOLD, 20));
+        
+        btnAddPedido = new JButton("Novo Pedido");
+        btnRelatorio = new JButton("Gerar Relatório");
+        
+        JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        panelBotoes.add(btnRelatorio);
+        panelBotoes.add(btnAddPedido);
+        
         panelTop.add(lblTitulo, BorderLayout.WEST);
-        panelTop.add(btnAddPedido, BorderLayout.EAST);
+        panelTop.add(panelBotoes, BorderLayout.EAST);
 
-        // Painel de busca
-        JPanel panelBusca = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        panelBusca.setBorder(new EmptyBorder(10, 20, 10, 20));
-        panelBusca.setBackground(Color.WHITE);
-
-        JLabel lblBusca = new JLabel("Buscar:");
-        lblBusca.setFont(new Font("Arial", Font.PLAIN, 14));
-        
-        campoBusca = new JTextField(20);
-        campoBusca.setFont(new Font("Arial", Font.PLAIN, 14));
-        campoBusca.setPreferredSize(new Dimension(250, 35));
-        campoBusca.setBorder(new LineBorder(new Color(206, 212, 218), 1));
-        
-        // Botões de busca estilizados localmente
-        btnBuscar = new JButton("Buscar");
-        estilizarBotao(btnBuscar, new Color(41, 128, 185), Color.WHITE);
-        
-        btnLimpar = new JButton("Limpar");
-        estilizarBotao(btnLimpar, new Color(41, 128, 185), Color.WHITE);
-
-        panelBusca.add(lblBusca);
-        panelBusca.add(campoBusca);
-        panelBusca.add(btnBuscar);
-        panelBusca.add(btnLimpar);
-
-        // Tabela de pedidos
-        String[] colunas = {"ID", "Cliente", "Data", "Valor Total", "Status", "Ações"};
-        Object[][] dados = {};
-
-        tabelaPedidos = new JTable(dados, colunas) {
+        // Tabela
+        String[] colunas = {"ID", "Código", "Descrição", "Cliente", "Valor", "Status"};
+        tableModel = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Tabela não editável
+                return false;
             }
         };
         
-        tabelaPedidos.setFont(new Font("Arial", Font.PLAIN, 13));
-        tabelaPedidos.setRowHeight(40);
-        tabelaPedidos.setSelectionBackground(new Color(220, 237, 255));
-        tabelaPedidos.setSelectionForeground(Color.BLACK);
+        tabelaPedidos = new JTable(tableModel);
+        tabelaPedidos.setFont(new Font("Arial", Font.PLAIN, 12));
+        tabelaPedidos.setRowHeight(25);
         
-        // Configurar cabeçalho da tabela
         JTableHeader header = tabelaPedidos.getTableHeader();
-        header.setFont(new Font("Arial", Font.BOLD, 13));
-        header.setBackground(new Color(233, 236, 239));
-        header.setForeground(new Color(33, 37, 41));
-        header.setReorderingAllowed(false);
+        header.setFont(new Font("Arial", Font.BOLD, 12));
+        header.setBackground(new Color(220, 220, 220));
         
-        tabelaPedidos.setGridColor(new Color(222, 226, 230));
+        JScrollPane scrollPane = new JScrollPane(tabelaPedidos);
         
-        // Configurar largura das colunas
-        tabelaPedidos.getColumnModel().getColumn(0).setPreferredWidth(50);
-        tabelaPedidos.getColumnModel().getColumn(1).setPreferredWidth(150);
-        tabelaPedidos.getColumnModel().getColumn(2).setPreferredWidth(100);
-        tabelaPedidos.getColumnModel().getColumn(3).setPreferredWidth(100);
-        tabelaPedidos.getColumnModel().getColumn(4).setPreferredWidth(100);
-        tabelaPedidos.getColumnModel().getColumn(5).setPreferredWidth(120);
-
-        scrollPane = new JScrollPane(tabelaPedidos);
-        scrollPane.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(222, 226, 230)),
-            "Lista de Pedidos",
-            0, 0,
-            new Font("Arial", Font.BOLD, 14),
-            new Color(73, 80, 87)
-        ));
-
-        // Painel central com busca e tabela
-        panelCenter = new JPanel(new BorderLayout(0, 10));
-        panelCenter.setBorder(new EmptyBorder(0, 20, 0, 20));
-        panelCenter.add(panelBusca, BorderLayout.NORTH);
-        panelCenter.add(scrollPane, BorderLayout.CENTER);
-
-        // Painel inferior com botões de ação
-        panelBottom = new JPanel();
-        panelBottom.setLayout(new FlowLayout(FlowLayout.CENTER, 15, 15));
-        panelBottom.setBackground(new Color(248, 249, 250));
-        panelBottom.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(222, 226, 230)));
-
-        // Botões estilizados localmente
-        btnEditar = new JButton("Editar Pedido");
-        estilizarBotao(btnEditar, new Color(41, 128, 185), Color.WHITE);
-        
-        btnExcluir = new JButton("Excluir Pedido");
-        estilizarBotao(btnExcluir, new Color(220, 53, 69), Color.WHITE);
-
-        panelBottom.add(btnEditar);
-        panelBottom.add(btnExcluir);
-
-        // Adicionar painéis ao frame
+        // Adicionar ao frame
         add(panelTop, BorderLayout.NORTH);
-        add(panelCenter, BorderLayout.CENTER);
-        add(panelBottom, BorderLayout.SOUTH);
+        add(scrollPane, BorderLayout.CENTER);
 
-        // Adicionar painel de status
-        adicionarPainelStatus();
+        // Eventos
+        configurarEventos();
     }
 
-    private void estilizarBotao(JButton botao, Color corFundo, Color corTexto) {
-        botao.setFont(new Font("Arial", Font.BOLD, 13));
-        botao.setBackground(corFundo);
-        botao.setForeground(corTexto);
-        botao.setFocusPainted(false);
-        botao.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(corFundo.darker(), 1),
-            BorderFactory.createEmptyBorder(10, 20, 10, 20)
-        ));
-        botao.setCursor(new Cursor(Cursor.HAND_CURSOR));
+    private void configurarEventos() {
+        btnAddPedido.addActionListener(e -> criarPedido());
+        btnRelatorio.addActionListener(e -> gerarRelatorioSimples());
+    }
+    
+    private void carregarDados() {
+        tableModel.setRowCount(0);
+        List<Pedido> pedidos = pedidoController.listarPedidos();
         
-        // Efeito hover apenas para este botão
-        botao.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseEntered(java.awt.event.MouseEvent evt) {
-                botao.setBackground(corFundo.darker());
-                botao.setBorder(BorderFactory.createCompoundBorder(
-                    new LineBorder(corFundo.darker().darker(), 1),
-                    BorderFactory.createEmptyBorder(10, 20, 10, 20)
-                ));
-            }
-            public void mouseExited(java.awt.event.MouseEvent evt) {
-                botao.setBackground(corFundo);
-                botao.setBorder(BorderFactory.createCompoundBorder(
-                    new LineBorder(corFundo.darker(), 1),
-                    BorderFactory.createEmptyBorder(10, 20, 10, 20)
-                ));
-            }
-        });
-        
-        // Efeito ao pressionar
-        botao.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mousePressed(java.awt.event.MouseEvent evt) {
-                botao.setBackground(corFundo.darker().darker());
-            }
-            public void mouseReleased(java.awt.event.MouseEvent evt) {
-                botao.setBackground(corFundo.darker());
-            }
-        });
-    }
-
-    private void adicionarPainelStatus() {
-        JPanel panelStatus = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
-        panelStatus.setBorder(new EmptyBorder(10, 20, 10, 20));
-        panelStatus.setBackground(Color.WHITE);
-
-        // Cartões de status
-        panelStatus.add(criarCartaoStatus("Total Pedidos", "0", new Color(0, 123, 255)));
-        panelStatus.add(criarCartaoStatus("Pendentes", "0", new Color(255, 193, 7)));
-        panelStatus.add(criarCartaoStatus("Concluídos", "0", new Color(40, 167, 69)));
-        panelStatus.add(criarCartaoStatus("Cancelados", "0", new Color(220, 53, 69)));
-
-        // Adicionar acima da tabela
-        panelCenter.add(panelStatus, BorderLayout.NORTH);
-    }
-
-    private JPanel criarCartaoStatus(String titulo, String valor, Color cor) {
-        JPanel cartao = new JPanel();
-        cartao.setLayout(new BoxLayout(cartao, BoxLayout.Y_AXIS));
-        cartao.setBackground(Color.WHITE);
-        cartao.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(new Color(222, 226, 230), 1),
-            BorderFactory.createEmptyBorder(15, 20, 15, 20)
-        ));
-        cartao.setPreferredSize(new Dimension(150, 80));
-
-        JLabel lblValor = new JLabel(valor);
-        lblValor.setFont(new Font("Arial", Font.BOLD, 24));
-        lblValor.setForeground(cor);
-        lblValor.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel lblTitulo = new JLabel(titulo);
-        lblTitulo.setFont(new Font("Arial", Font.PLAIN, 14));
-        lblTitulo.setForeground(new Color(73, 80, 87));
-        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        cartao.add(lblValor);
-        cartao.add(Box.createRigidArea(new Dimension(0, 5)));
-        cartao.add(lblTitulo);
-
-        return cartao;
-    }
-
-    // Getters para os componentes (para uso no controller)
-    public JButton getBtnAddPedido() {
-        return btnAddPedido;
-    }
-
-    public JTable getTabelaPedidos() {
-        return tabelaPedidos;
-    }
-
-    public JButton getBtnBuscar() {
-        return btnBuscar;
-    }
-
-    public JButton getBtnLimpar() {
-        return btnLimpar;
-    }
-
-    public JButton getBtnEditar() {
-        return btnEditar;
-    }
-
-    public JButton getBtnExcluir() {
-        return btnExcluir;
-    }
-
-    public JTextField getCampoBusca() {
-        return campoBusca;
-    }
-
-    // Método para obter o ID do pedido selecionado
-    public Integer getPedidoSelecionadoId() {
-        int linha = tabelaPedidos.getSelectedRow();
-        if (linha != -1) {
-            return (Integer) tabelaPedidos.getValueAt(linha, 0);
+        for (Pedido pedido : pedidos) {
+            String statusDescricao = pedidoController.getDescricaoStatus(pedido.getSt_pedido());
+            
+            Object[] row = {
+                pedido.getId_pedido(),
+                pedido.getCd_pedido(),
+                pedido.getDs_pedido(),
+                pedido.getId_cliente() != null ? pedido.getId_cliente() : "-",
+                String.format("R$ %.2f", pedido.getTotal() != null ? pedido.getTotal() : 0.0),
+                statusDescricao
+            };
+            tableModel.addRow(row);
         }
-        return null;
+    }
+    
+    private void criarPedido() {
+        String codigoStr = JOptionPane.showInputDialog(this, "Código do pedido:");
+        if (codigoStr == null || codigoStr.trim().isEmpty()) return;
+        
+        String descricao = JOptionPane.showInputDialog(this, "Descrição:");
+        if (descricao == null) return;
+        
+        try {
+            Integer codigo = Integer.parseInt(codigoStr);
+            Pedido pedido = pedidoController.criarPedido(codigo, descricao, null);
+            if (pedido != null) {
+                carregarDados();
+                JOptionPane.showMessageDialog(this, "Pedido criado!");
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void gerarRelatorioSimples() {
+        List<Pedido> pedidos = pedidoController.listarPedidos();
+        
+        if (pedidos.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Nenhum pedido para gerar relatório!");
+            return;
+        }
+        
+        // Gera relatório simples
+        RelatorioUtil.gerarRelatorioPedidos(pedidos, "relatorio_pedidos.txt");
+        
+        JOptionPane.showMessageDialog(this, 
+            "Relatório gerado!\nArquivo: relatorio_pedidos.txt", 
+            "Relatório", 
+            JOptionPane.INFORMATION_MESSAGE);
     }
 
-    // Método para testar a interface
+    // Getters simples
+    public JButton getBtnAddPedido() { return btnAddPedido; }
+    public JTable getTabelaPedidos() { return tabelaPedidos; }
+    public JButton getBtnRelatorio() { return btnRelatorio; }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            try {
-                // Apenas para este frame, não afeta outros
-                JFrame.setDefaultLookAndFeelDecorated(false);
-                new PedidoForm().setVisible(true);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            new PedidoForm().setVisible(true);
         });
     }
 }

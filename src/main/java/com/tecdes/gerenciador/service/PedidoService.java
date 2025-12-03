@@ -1,203 +1,117 @@
 package com.tecdes.gerenciador.service;
 
-import com.tecdes.gerenciador.model.entity.Pedido;
-import com.tecdes.gerenciador.model.entity.ItemPedido;
-import com.tecdes.gerenciador.model.entity.Produto;
 import com.tecdes.gerenciador.model.StatusPedido;
-import com.tecdes.gerenciador.repository.IPedidoRepository;
+import com.tecdes.gerenciador.model.entity.Pedido;
+import com.tecdes.gerenciador.repository.PedidoRepository;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 public class PedidoService {
     
-    private IPedidoRepository pedidoRepository = null;
+    private final PedidoRepository pedidoRepository;
     
     public PedidoService() {
-        // this.pedidoRepository = pedidoRepository;
+        this.pedidoRepository = new PedidoRepository();
     }
     
-    // ========== OPERAÇÕES BÁSICAS DE PEDIDO ==========
-    
-    public Pedido criarPedido(Integer codigo, String descricao) {
+    public Pedido criarPedido(Integer codigo, String descricao, Integer clienteId) {
         validarCodigoPedido(codigo);
         
         Pedido pedido = new Pedido();
         pedido.setCd_pedido(codigo);
         pedido.setDs_pedido(descricao);
-        pedido.setStatus(StatusPedido.PENDENTE);
+        pedido.setId_cliente(clienteId);
+        pedido.setSt_pedido("P"); // Pendente
         
         return pedidoRepository.save(pedido);
     }
-
     
-    
-    private void validarCodigoPedido(Integer codigo) {
-        if (codigo == null || codigo <= 0) {
-            throw new IllegalArgumentException("Código do pedido inválido.");
-        }
-        
-        if (pedidoRepository.existsByCodigo(codigo)) {
-            throw new IllegalArgumentException("Código já existe.");
-        }
-    }
-    
-    public Double calcularTotal(Pedido pedido) {
-        validarPedidoParaCalculo(pedido);
-        
-        double total = 0.0;
-        for (ItemPedido item : pedido.getItens()) {
-            validarItemParaCalculo(item);
-            total += item.calcularTotal();
-        }
-        
-        pedido.setTotal(total);
-        return total;
-    }
-    
-    private void validarPedidoParaCalculo(Pedido pedido) {
+    public Pedido atualizarPedido(Integer id, Integer codigo, String descricao, String status, Double total, Integer clienteId) {
+        Pedido pedido = pedidoRepository.findById(id);
         if (pedido == null) {
-            throw new IllegalArgumentException("Pedido não pode ser nulo.");
+            throw new IllegalArgumentException("Pedido não encontrado: " + id);
         }
         
-        if (pedido.getItens() == null || pedido.getItens().isEmpty()) {
-            throw new IllegalArgumentException("Pedido sem itens.");
+        // Verificar se código foi alterado
+        if (!pedido.getCd_pedido().equals(codigo) && pedidoRepository.existsByCodigo(codigo)) {
+            throw new IllegalArgumentException("Código já existe: " + codigo);
         }
         
-        // Verificar produtos duplicados
-        Set<Integer> produtosIds = new HashSet<>();
-        for (ItemPedido item : pedido.getItens()) {
-            if (item.getProduto() != null) {
-                Integer produtoId = item.getProduto().getId_produto();
-                if (produtoId != null && !produtosIds.add(produtoId)) {
-                    throw new IllegalArgumentException("Produto duplicado: " + item.getProduto().getNm_produto());
-                }
-            }
-        }
+        pedido.setCd_pedido(codigo);
+        pedido.setDs_pedido(descricao);
+        pedido.setSt_pedido(status != null ? status : pedido.getSt_pedido());
+        pedido.setTotal(total);
+        pedido.setId_cliente(clienteId);
+        
+        return pedidoRepository.update(pedido);
     }
     
-    private void validarItemParaCalculo(ItemPedido item) {
-        if (item.getProduto() == null) {
-            throw new IllegalArgumentException("Item sem produto.");
-        }
-        
-        if (item.getProduto().getVl_produto() == null) {
-            throw new IllegalArgumentException("Produto sem preço: " + item.getProduto().getNm_produto());
-        }
-        
-        if (item.getQuantidade() == null || item.getQuantidade() <= 0) {
-            throw new IllegalArgumentException("Quantidade inválida para: " + item.getProduto().getNm_produto());
-        }
+    public boolean removerPedido(Integer id) {
+        return pedidoRepository.delete(id);
     }
     
-    // ========== GERENCIAMENTO DE ITENS ==========
-    
-    public void adicionarItem(Pedido pedido, Produto produto, Integer quantidade) {
-        if (pedido.isFinalizado()) {
-            throw new IllegalStateException("Pedido finalizado não aceita alterações.");
-        }
-        
-        if (produto == null) {
-            throw new IllegalArgumentException("Produto não pode ser nulo.");
-        }
-        
-        if (quantidade == null || quantidade <= 0) {
-            throw new IllegalArgumentException("Quantidade inválida.");
-        }
-        
-        ItemPedido item = new ItemPedido(produto, quantidade);
-        pedido.adicionarItem(item);
-        calcularTotal(pedido);
+    public Pedido buscarPorId(Integer id) {
+        return pedidoRepository.findById(id);
     }
-    
-    public void removerItem(Pedido pedido, int index) {
-        if (pedido.isFinalizado()) {
-            throw new IllegalStateException("Pedido finalizado não aceita alterações.");
-        }
-        
-        if (index < 0 || index >= pedido.getItens().size()) {
-            throw new IllegalArgumentException("Índice inválido.");
-        }
-        
-        pedido.removerItem(index);
-        
-        if (!pedido.getItens().isEmpty()) {
-            calcularTotal(pedido);
-        } else {
-            pedido.setTotal(0.0);
-        }
-    }
-    
-    // ========== CONTROLE DE STATUS ==========
-    
-    public void alterarStatus(Pedido pedido, StatusPedido novoStatus) {
-        if (pedido == null || novoStatus == null) {
-            throw new IllegalArgumentException("Parâmetros inválidos.");
-        }
-        
-        StatusPedido atual = pedido.getStatus();
-        validarTransicaoStatus(atual, novoStatus);
-        
-        pedido.setStatus(novoStatus);
-        
-        // Recalcular ao finalizar
-        if (novoStatus == StatusPedido.ENTREGUE) {
-            calcularTotal(pedido);
-        }
-    }
-    
-    private void validarTransicaoStatus(StatusPedido atual, StatusPedido novo) {
-        // Não pode alterar status finalizados
-        if (atual == StatusPedido.ENTREGUE || atual == StatusPedido.CANCELADO) {
-            throw new IllegalStateException("Pedido finalizado não pode ter status alterado.");
-        }
-        
-        // Fluxo permitido:
-        // PENDENTE -> PROCESSANDO -> PRONTO -> ENTREGUE
-        // Qualquer status pode ir para CANCELADO
-        
-        switch (atual) {
-            case PENDENTE:
-                if (!(novo == StatusPedido.PROCESSANDO || novo == StatusPedido.CANCELADO)) {
-                    throw new IllegalStateException("De PENDENTE só pode ir para PROCESSANDO ou CANCELADO.");
-                }
-                break;
-                
-            case PROCESSANDO:
-                if (!(novo == StatusPedido.PRONTO || novo == StatusPedido.CANCELADO)) {
-                    throw new IllegalStateException("De PROCESSANDO só pode ir para PRONTO ou CANCELADO.");
-                }
-                break;
-                
-            case PRONTO:
-                if (!(novo == StatusPedido.ENTREGUE || novo == StatusPedido.CANCELADO)) {
-                    throw new IllegalStateException("De PRONTO só pode ir para ENTREGUE ou CANCELADO.");
-                }
-                break;
-        }
-    }
-    
-    public void cancelarPedido(Pedido pedido) {
-        alterarStatus(pedido, StatusPedido.CANCELADO);
-    }
-    
-    public void finalizarPedido(Pedido pedido) {
-        alterarStatus(pedido, StatusPedido.ENTREGUE);
-    }
-    
-    // ========== CONSULTAS SIMPLES ==========
     
     public Pedido buscarPorCodigo(Integer codigo) {
         return pedidoRepository.findByCodigo(codigo);
     }
     
-    public boolean pedidoPodeSerCancelado(Pedido pedido) {
-        return pedido != null && 
-               !pedido.isFinalizado() && 
-               pedido.getStatus() != StatusPedido.CANCELADO;
+    public List<Pedido> buscarPorCliente(Integer clienteId) {
+        return pedidoRepository.findByClienteId(clienteId);
     }
-
-    public void atualizarTotaisDosItens(Pedido pedido) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    
+    public List<Pedido> buscarPorStatus(String status) {
+        return pedidoRepository.findByStatus(status);
+    }
+    
+    public List<Pedido> listarTodos() {
+        return pedidoRepository.findAll();
+    }
+    
+    public boolean alterarStatus(Integer id, String novoStatus) {
+        Pedido pedido = pedidoRepository.findById(id);
+        if (pedido != null) {
+            pedido.setSt_pedido(novoStatus);
+            pedidoRepository.update(pedido);
+            return true;
+        }
+        return false;
+    }
+    
+    public boolean cancelarPedido(Integer id) {
+        return alterarStatus(id, "C"); // C = Cancelado
+    }
+    
+    public boolean finalizarPedido(Integer id) {
+        return alterarStatus(id, "D"); // D = Entregue
+    }
+    
+    private void validarCodigoPedido(Integer codigo) {
+        if (codigo == null || codigo <= 0) {
+            throw new IllegalArgumentException("Código do pedido inválido");
+        }
+        
+        if (pedidoRepository.existsByCodigo(codigo)) {
+            throw new IllegalArgumentException("Código já existe: " + codigo);
+        }
+    }
+    
+    // Métodos para estatísticas
+    public int contarPedidos() {
+        return pedidoRepository.findAll().size();
+    }
+    
+    public int contarPedidosPendentes() {
+        return pedidoRepository.countByStatus("P");
+    }
+    
+    public int contarPedidosConcluidos() {
+        return pedidoRepository.countByStatus("D");
+    }
+    
+    public int contarPedidosCancelados() {
+        return pedidoRepository.countByStatus("C");
     }
 }
